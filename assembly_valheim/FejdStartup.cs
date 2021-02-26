@@ -517,7 +517,7 @@ public class FejdStartup : MonoBehaviour
 		this.m_serverList.Clear();
 		ZSteamMatchmaking.instance.GetServers(this.m_serverList);
 		this.m_serverList.Sort((MasterClient.ServerData a, MasterClient.ServerData b) => a.m_name.CompareTo(b.m_name));
-		if (!this.m_serverList.Contains(this.m_joinServer))
+		if (this.m_joinServer != null && !this.m_serverList.Contains(this.m_joinServer))
 		{
 			ZLog.Log("Serverlist does not contain selected server, clearing");
 			if (this.m_serverList.Count > 0)

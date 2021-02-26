@@ -185,17 +185,36 @@ public class World
 			ZLog.Log("  failed to load " + name);
 			return new World(name, true, false);
 		}
-		byte[] data;
+		World result;
 		try
 		{
 			BinaryReader binaryReader = new BinaryReader(fileStream);
 			int count = binaryReader.ReadInt32();
-			data = binaryReader.ReadBytes(count);
+			ZPackage zpackage = new ZPackage(binaryReader.ReadBytes(count));
+			int num = zpackage.ReadInt();
+			if (!global::Version.IsWorldVersionCompatible(num))
+			{
+				ZLog.Log("incompatible world version " + num);
+				result = new World(name, false, true);
+			}
+			else
+			{
+				World world = new World();
+				world.m_name = zpackage.ReadString();
+				world.m_seedName = zpackage.ReadString();
+				world.m_seed = zpackage.ReadInt();
+				world.m_uid = zpackage.ReadLong();
+				if (num >= 26)
+				{
+					world.m_worldGenVersion = zpackage.ReadInt();
+				}
+				result = world;
+			}
 		}
 		catch
 		{
 			ZLog.LogWarning("  error loading world " + name);
-			return new World(name, true, false);
+			result = new World(name, true, false);
 		}
 		finally
 		{
@@ -204,23 +223,7 @@ public class World
 				fileStream.Dispose();
 			}
 		}
-		ZPackage zpackage = new ZPackage(data);
-		int num = zpackage.ReadInt();
-		if (!global::Version.IsWorldVersionCompatible(num))
-		{
-			ZLog.Log("incompatible world version " + num);
-			return new World(name, false, true);
-		}
-		World world = new World();
-		world.m_name = zpackage.ReadString();
-		world.m_seedName = zpackage.ReadString();
-		world.m_seed = zpackage.ReadInt();
-		world.m_uid = zpackage.ReadLong();
-		if (num >= 26)
-		{
-			world.m_worldGenVersion = zpackage.ReadInt();
-		}
-		return world;
+		return result;
 	}
 
 	public string m_name = "";
