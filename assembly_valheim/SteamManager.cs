@@ -120,6 +120,7 @@ public class SteamManager : MonoBehaviour
 		SteamGameServer.LogOnAnonymous();
 		ZLog.Log("Server ID " + SteamGameServer.GetSteamID());
 		ZSteamMatchmaking.Initialize();
+		ZLog.Log("Authentication:" + SteamGameServerNetworkingSockets.InitAuthentication().ToString());
 		ZLog.Log("Steam game server initialized");
 		SteamManager.s_EverInialized = true;
 	}

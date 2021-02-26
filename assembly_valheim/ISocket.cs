@@ -22,6 +22,8 @@ public interface ISocket
 
 	void GetAndResetStats(out int totalSent, out int totalRecv);
 
+	void GetConnectionQuality(out float localQuality, out float remoteQuality, out int ping, out float outByteSec, out float inByteSec);
+
 	ISocket Accept();
 
 	int GetHostPort();

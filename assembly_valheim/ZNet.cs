@@ -498,14 +498,13 @@ public class ZNet : MonoBehaviour
 	private void Update()
 	{
 		float deltaTime = Time.deltaTime;
-		ZSteamSocket.Update();
+		ZSteamSocket.UpdateAllSockets();
 		if (this.IsServer())
 		{
 			this.UpdateBanList(deltaTime);
 		}
 		this.CheckForIncommingServerConnections();
 		this.UpdatePeers(deltaTime);
-		this.UpdateStats(deltaTime);
 		this.SendPeriodicData(deltaTime);
 		this.m_zdoMan.Update(deltaTime);
 		this.UpdateSave();
@@ -572,28 +571,6 @@ public class ZNet : MonoBehaviour
 	public bool IsSaving()
 	{
 		return this.m_saveThread != null;
-	}
-
-	private void UpdateStats(float dt)
-	{
-		this.m_statTimer += dt;
-		if (this.m_statTimer >= 1f)
-		{
-			this.m_statTimer = 0f;
-			this.m_totalRecv = 0;
-			this.m_totalSent = 0;
-			foreach (ZNetPeer znetPeer in this.m_peers)
-			{
-				if (znetPeer.m_socket != null)
-				{
-					int num;
-					int num2;
-					znetPeer.m_socket.GetAndResetStats(out num, out num2);
-					this.m_totalRecv += num2;
-					this.m_totalSent += num;
-				}
-			}
-		}
 	}
 
 	public void ConsoleSave()
@@ -1184,10 +1161,28 @@ public class ZNet : MonoBehaviour
 		return this.m_players.Count;
 	}
 
-	public void GetNetStats(out int totalSent, out int totalRecv)
+	public void GetNetStats(out float localQuality, out float remoteQuality, out int ping, out float outByteSec, out float inByteSec)
 	{
-		totalSent = this.m_totalSent;
-		totalRecv = this.m_totalRecv;
+		localQuality = 0f;
+		remoteQuality = 0f;
+		ping = 0;
+		outByteSec = 0f;
+		inByteSec = 0f;
+		if (this.IsServer())
+		{
+			return;
+		}
+		if (ZNet.m_connectionStatus == ZNet.ConnectionStatus.Connected)
+		{
+			foreach (ZNetPeer znetPeer in this.m_peers)
+			{
+				if (znetPeer.IsReady())
+				{
+					znetPeer.m_socket.GetConnectionQuality(out localQuality, out remoteQuality, out ping, out outByteSec, out inByteSec);
+					break;
+				}
+			}
+		}
 	}
 
 	public void SetNetTime(double time)
@@ -1560,12 +1555,6 @@ public class ZNet : MonoBehaviour
 	private bool m_publicReferencePosition;
 
 	private float m_periodicSendTimer;
-
-	private float m_statTimer;
-
-	private int m_totalSent;
-
-	private int m_totalRecv;
 
 	private bool m_haveStoped;
 

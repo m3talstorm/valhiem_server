@@ -37,7 +37,6 @@ public class ZRpc : IDisposable
 				ZLog.Log("Exception in ZRpc::HandlePackage: " + arg);
 			}
 		}
-		this.UpdatePing(dt);
 		return true;
 	}
 

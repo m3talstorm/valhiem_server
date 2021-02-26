@@ -366,6 +366,15 @@ public class ZSocket2 : IDisposable, ISocket
 		return this.m_isSending || this.m_sendQueue.Count > 0;
 	}
 
+	public void GetConnectionQuality(out float localQuality, out float remoteQuality, out int ping, out float outByteSec, out float inByteSec)
+	{
+		localQuality = 0f;
+		remoteQuality = 0f;
+		ping = 0;
+		outByteSec = 0f;
+		inByteSec = 0f;
+	}
+
 	public void GetAndResetStats(out int totalSent, out int totalRecv)
 	{
 		totalSent = this.m_totalSent;

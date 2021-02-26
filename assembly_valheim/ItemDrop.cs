@@ -223,6 +223,20 @@ public class ItemDrop : MonoBehaviour, Hoverable, Interactable
 		return false;
 	}
 
+	public void SetStack(int stack)
+	{
+		if (!this.m_nview.IsValid() || !this.m_nview.IsOwner())
+		{
+			return;
+		}
+		this.m_itemData.m_stack = stack;
+		if (this.m_itemData.m_stack > this.m_itemData.m_shared.m_maxStackSize)
+		{
+			this.m_itemData.m_stack = this.m_itemData.m_shared.m_maxStackSize;
+		}
+		this.Save();
+	}
+
 	public void Pickup(Humanoid character)
 	{
 		if (!this.m_nview.IsValid())

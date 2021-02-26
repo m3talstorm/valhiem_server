@@ -548,10 +548,18 @@ public class Humanoid : Character
 
 	public bool DropItem(Inventory inventory, ItemDrop.ItemData item, int amount)
 	{
+		if (amount == 0)
+		{
+			return false;
+		}
 		if (item.m_shared.m_questItem)
 		{
 			this.Message(MessageHud.MessageType.Center, "$msg_cantdrop", 0, null);
 			return false;
+		}
+		if (amount > item.m_stack)
+		{
+			amount = item.m_stack;
 		}
 		this.RemoveFromEquipQueue(item);
 		this.UnequipItem(item, false);

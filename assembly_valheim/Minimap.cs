@@ -956,6 +956,7 @@ public class Minimap : MonoBehaviour
 				zpackage.Write(pinData.m_checked);
 			}
 		}
+		zpackage.Write(ZNet.instance.IsReferencePositionPublic());
 		return zpackage.GetArray();
 	}
 
@@ -997,6 +998,11 @@ public class Minimap : MonoBehaviour
 				bool isChecked = num >= 3 && zpackage.ReadBool();
 				this.AddPin(pos, type, name, true, isChecked);
 			}
+		}
+		if (num >= 4)
+		{
+			bool publicReferencePosition = zpackage.ReadBool();
+			ZNet.instance.SetPublicReferencePosition(publicReferencePosition);
 		}
 		this.m_fogTexture.Apply();
 	}
@@ -1291,7 +1297,7 @@ public class Minimap : MonoBehaviour
 
 	private Color noForest = new Color(0f, 0f, 0f, 0f);
 
-	private static int MAPVERSION = 3;
+	private static int MAPVERSION = 4;
 
 	private static Minimap m_instance;
 

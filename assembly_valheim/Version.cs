@@ -90,14 +90,15 @@ internal class Version
 
 	public static int m_major = 0;
 
-	public static int m_minor = 145;
+	public static int m_minor = 146;
 
-	public static int m_patch = 6;
+	public static int m_patch = 8;
 
-	public static int m_playerVersion = 32;
+	public static int m_playerVersion = 33;
 
 	public static int[] m_compatiblePlayerVersions = new int[]
 	{
+		32,
 		31,
 		30,
 		29,

@@ -383,7 +383,7 @@ public class Console : MonoBehaviour
 							for (int i = 0; i < array2.Length; i++)
 							{
 								ZNetView component = array2[i].GetComponent<ZNetView>();
-								if (component)
+								if (component && component.IsValid() && component.IsOwner())
 								{
 									component.Destroy();
 								}

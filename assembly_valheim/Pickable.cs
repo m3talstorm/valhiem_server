@@ -137,7 +137,7 @@ public class Pickable : MonoBehaviour, Hoverable, Interactable
 		Vector3 position = base.transform.position + Vector3.up * this.m_spawnOffset + new Vector3(vector.x, 0.5f * (float)offset, vector.y);
 		Quaternion rotation = Quaternion.Euler(0f, (float)UnityEngine.Random.Range(0, 360), 0f);
 		GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(prefab, position, rotation);
-		gameObject.GetComponent<ItemDrop>().m_itemData.m_stack = stack;
+		gameObject.GetComponent<ItemDrop>().SetStack(stack);
 		gameObject.GetComponent<Rigidbody>().velocity = Vector3.up * 4f;
 	}
 

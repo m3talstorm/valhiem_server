@@ -56,8 +56,7 @@ public class SE_Harpooned : StatusEffect
 			{
 				normalized.y = 0f;
 				normalized.Normalize();
-				this.m_character.GetStandingOnShip();
-				if (!this.m_character.IsAttached())
+				if (this.m_character.GetStandingOnShip() == null && !this.m_character.IsAttached())
 				{
 					component.AddForce(normalized * num4, ForceMode.VelocityChange);
 				}

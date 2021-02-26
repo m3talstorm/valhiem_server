@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Steamworks;
 
@@ -7,68 +8,102 @@ public class ZSteamSocket : IDisposable, ISocket
 {
 	public ZSteamSocket()
 	{
-		ZSteamSocket.m_sockets.Add(this);
 		ZSteamSocket.RegisterGlobalCallbacks();
+		ZSteamSocket.m_sockets.Add(this);
 	}
 
 	public ZSteamSocket(CSteamID peerID)
 	{
-		ZSteamSocket.m_sockets.Add(this);
-		this.m_peerID = peerID;
 		ZSteamSocket.RegisterGlobalCallbacks();
+		this.m_peerID.SetSteamID(peerID);
+		this.m_con = SteamGameServerNetworkingSockets.ConnectP2P(ref this.m_peerID, 0, 0, null);
+		ZLog.Log("Connecting to " + this.m_peerID.GetSteamID().ToString());
+		ZSteamSocket.m_sockets.Add(this);
+	}
+
+	public ZSteamSocket(HSteamNetConnection con)
+	{
+		ZSteamSocket.RegisterGlobalCallbacks();
+		this.m_con = con;
+		SteamNetConnectionInfo_t steamNetConnectionInfo_t;
+		SteamGameServerNetworkingSockets.GetConnectionInfo(this.m_con, out steamNetConnectionInfo_t);
+		this.m_peerID = steamNetConnectionInfo_t.m_identityRemote;
+		ZLog.Log("Connecting to " + this.m_peerID.ToString());
+		ZSteamSocket.m_sockets.Add(this);
 	}
 
 	private static void RegisterGlobalCallbacks()
 	{
-		if (ZSteamSocket.m_connectionFailed == null)
+		if (ZSteamSocket.m_statusChanged == null)
 		{
-			ZLog.Log("ZSteamSocket  Registering global callbacks");
-			ZSteamSocket.m_connectionFailed = Callback<P2PSessionConnectFail_t>.CreateGameServer(new Callback<P2PSessionConnectFail_t>.DispatchDelegate(ZSteamSocket.OnConnectionFailed));
-		}
-		if (ZSteamSocket.m_SessionRequest == null)
-		{
-			ZSteamSocket.m_SessionRequest = Callback<P2PSessionRequest_t>.CreateGameServer(new Callback<P2PSessionRequest_t>.DispatchDelegate(ZSteamSocket.OnSessionRequest));
+			ZSteamSocket.m_statusChanged = Callback<SteamNetConnectionStatusChangedCallback_t>.CreateGameServer(new Callback<SteamNetConnectionStatusChangedCallback_t>.DispatchDelegate(ZSteamSocket.OnStatusChanged));
+			GCHandle gchandle = GCHandle.Alloc(30000f, GCHandleType.Pinned);
+			SteamGameServerNetworkingUtils.SetConfigValue(ESteamNetworkingConfigValue.k_ESteamNetworkingConfig_TimeoutInitial, ESteamNetworkingConfigScope.k_ESteamNetworkingConfig_Global, IntPtr.Zero, ESteamNetworkingConfigDataType.k_ESteamNetworkingConfig_Float, gchandle.AddrOfPinnedObject());
+			SteamGameServerNetworkingUtils.SetConfigValue(ESteamNetworkingConfigValue.k_ESteamNetworkingConfig_TimeoutConnected, ESteamNetworkingConfigScope.k_ESteamNetworkingConfig_Global, IntPtr.Zero, ESteamNetworkingConfigDataType.k_ESteamNetworkingConfig_Float, gchandle.AddrOfPinnedObject());
+			gchandle.Free();
 		}
 	}
 
 	private static void UnregisterGlobalCallbacks()
 	{
 		ZLog.Log("ZSteamSocket  UnregisterGlobalCallbacks, existing sockets:" + ZSteamSocket.m_sockets.Count);
-		if (ZSteamSocket.m_connectionFailed != null)
+		if (ZSteamSocket.m_statusChanged != null)
 		{
-			ZSteamSocket.m_connectionFailed.Dispose();
-			ZSteamSocket.m_connectionFailed = null;
-		}
-		if (ZSteamSocket.m_SessionRequest != null)
-		{
-			ZSteamSocket.m_SessionRequest.Dispose();
-			ZSteamSocket.m_SessionRequest = null;
+			ZSteamSocket.m_statusChanged.Dispose();
+			ZSteamSocket.m_statusChanged = null;
 		}
 	}
 
-	private static void OnConnectionFailed(P2PSessionConnectFail_t data)
+	private static void OnStatusChanged(SteamNetConnectionStatusChangedCallback_t data)
 	{
-		ZLog.Log("Got connection failed callback: " + data.m_steamIDRemote);
-		foreach (ZSteamSocket zsteamSocket in ZSteamSocket.m_sockets)
+		ZLog.Log("Got status changed msg " + data.m_info.m_eState);
+		if (data.m_info.m_eState == ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_Connecting && data.m_eOldState == ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_None)
 		{
-			if (zsteamSocket.IsPeer(data.m_steamIDRemote))
-			{
-				zsteamSocket.Close();
-			}
-		}
-	}
-
-	private static void OnSessionRequest(P2PSessionRequest_t data)
-	{
-		ZLog.Log("Got session request from " + data.m_steamIDRemote);
-		if (SteamGameServerNetworking.AcceptP2PSessionWithUser(data.m_steamIDRemote))
-		{
+			ZLog.Log("New connection");
 			ZSteamSocket listner = ZSteamSocket.GetListner();
 			if (listner != null)
 			{
-				listner.QueuePendingConnection(data.m_steamIDRemote);
+				listner.OnNewConnection(data.m_hConn);
 			}
 		}
+		if (data.m_info.m_eState == ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_ProblemDetectedLocally)
+		{
+			ZLog.Log(string.Concat(new object[]
+			{
+				"Got problem ",
+				data.m_info.m_eEndReason,
+				":",
+				data.m_info.m_szEndDebug
+			}));
+			ZSteamSocket zsteamSocket = ZSteamSocket.FindSocket(data.m_hConn);
+			if (zsteamSocket != null)
+			{
+				ZLog.Log("  Closing socket " + zsteamSocket.GetHostName());
+				zsteamSocket.Close();
+			}
+		}
+		if (data.m_info.m_eState == ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_ClosedByPeer)
+		{
+			ZLog.Log("Socket closed by peer " + data);
+			ZSteamSocket zsteamSocket2 = ZSteamSocket.FindSocket(data.m_hConn);
+			if (zsteamSocket2 != null)
+			{
+				ZLog.Log("  Closing socket " + zsteamSocket2.GetHostName());
+				zsteamSocket2.Close();
+			}
+		}
+	}
+
+	private static ZSteamSocket FindSocket(HSteamNetConnection con)
+	{
+		foreach (ZSteamSocket zsteamSocket in ZSteamSocket.m_sockets)
+		{
+			if (zsteamSocket.m_con == con)
+			{
+				return zsteamSocket;
+			}
+		}
+		return null;
 	}
 
 	public void Dispose()
@@ -86,46 +121,60 @@ public class ZSteamSocket : IDisposable, ISocket
 
 	public void Close()
 	{
-		ZLog.Log("Closing socket " + this.GetEndPointString());
-		if (this.m_peerID != CSteamID.Nil)
+		if (this.m_con != HSteamNetConnection.Invalid)
 		{
+			ZLog.Log("Closing socket " + this.GetEndPointString());
 			this.Flush();
 			ZLog.Log("  send queue size:" + this.m_sendQueue.Count);
 			Thread.Sleep(100);
-			P2PSessionState_t p2PSessionState_t;
-			SteamGameServerNetworking.GetP2PSessionState(this.m_peerID, out p2PSessionState_t);
-			ZLog.Log("  P2P state, bytes in send queue:" + p2PSessionState_t.m_nBytesQueuedForSend);
-			SteamGameServerNetworking.CloseP2PSessionWithUser(this.m_peerID);
-			SteamGameServer.EndAuthSession(this.m_peerID);
-			this.m_peerID = CSteamID.Nil;
+			SteamGameServerNetworkingSockets.CloseConnection(this.m_con, 0, "", false);
+			this.m_con = HSteamNetConnection.Invalid;
 		}
-		this.m_listner = false;
+		if (this.m_listenSocket != HSteamListenSocket.Invalid)
+		{
+			ZLog.Log("Stopping listening socket");
+			SteamGameServerNetworkingSockets.CloseListenSocket(this.m_listenSocket);
+			this.m_listenSocket = HSteamListenSocket.Invalid;
+		}
+		if (ZSteamSocket.m_hostSocket == this)
+		{
+			ZSteamSocket.m_hostSocket = null;
+		}
+		this.m_peerID.Clear();
 	}
 
 	public bool StartHost()
 	{
-		this.m_listner = true;
+		if (ZSteamSocket.m_hostSocket != null)
+		{
+			ZLog.Log("Listen socket already started");
+			return false;
+		}
+		this.m_listenSocket = SteamGameServerNetworkingSockets.CreateListenSocketP2P(0, 0, null);
+		ZSteamSocket.m_hostSocket = this;
 		this.m_pendingConnections.Clear();
 		return true;
 	}
 
-	private ZSteamSocket QueuePendingConnection(CSteamID id)
+	private void OnNewConnection(HSteamNetConnection con)
 	{
-		foreach (ZSteamSocket zsteamSocket in this.m_pendingConnections)
+		EResult eresult = SteamGameServerNetworkingSockets.AcceptConnection(con);
+		ZLog.Log("Accepting connection " + eresult);
+		if (eresult == EResult.k_EResultOK)
 		{
-			if (zsteamSocket.IsPeer(id))
-			{
-				return zsteamSocket;
-			}
+			this.QueuePendingConnection(con);
 		}
-		ZSteamSocket zsteamSocket2 = new ZSteamSocket(id);
-		this.m_pendingConnections.Enqueue(zsteamSocket2);
-		return zsteamSocket2;
+	}
+
+	private void QueuePendingConnection(HSteamNetConnection con)
+	{
+		ZSteamSocket item = new ZSteamSocket(con);
+		this.m_pendingConnections.Enqueue(item);
 	}
 
 	public ISocket Accept()
 	{
-		if (!this.m_listner)
+		if (this.m_listenSocket == HSteamListenSocket.Invalid)
 		{
 			return null;
 		}
@@ -138,7 +187,7 @@ public class ZSteamSocket : IDisposable, ISocket
 
 	public bool IsConnected()
 	{
-		return this.m_peerID != CSteamID.Nil;
+		return this.m_con != HSteamNetConnection.Invalid;
 	}
 
 	public void Send(ZPackage pkg)
@@ -163,6 +212,8 @@ public class ZSteamSocket : IDisposable, ISocket
 	public bool Flush()
 	{
 		this.SendQueuedPackages();
+		HSteamNetConnection con = this.m_con;
+		SteamGameServerNetworkingSockets.FlushMessagesOnConnection(this.m_con);
 		return this.m_sendQueue.Count == 0;
 	}
 
@@ -175,59 +226,50 @@ public class ZSteamSocket : IDisposable, ISocket
 		while (this.m_sendQueue.Count > 0)
 		{
 			byte[] array = this.m_sendQueue.Peek();
-			EP2PSend eP2PSendType = EP2PSend.k_EP2PSendReliable;
-			if (!SteamGameServerNetworking.SendP2PPacket(this.m_peerID, array, (uint)array.Length, eP2PSendType, 0))
+			IntPtr intPtr = Marshal.AllocHGlobal(array.Length);
+			Marshal.Copy(array, 0, intPtr, array.Length);
+			long num;
+			EResult eresult = SteamGameServerNetworkingSockets.SendMessageToConnection(this.m_con, intPtr, (uint)array.Length, 9, out num);
+			Marshal.FreeHGlobal(intPtr);
+			if (eresult != EResult.k_EResultOK)
 			{
-				break;
+				ZLog.Log("Failed to send data " + eresult);
+				return;
 			}
 			this.m_totalSent += array.Length;
 			this.m_sendQueue.Dequeue();
 		}
 	}
 
-	public static void Update()
+	public static void UpdateAllSockets()
 	{
 		foreach (ZSteamSocket zsteamSocket in ZSteamSocket.m_sockets)
 		{
-			zsteamSocket.SendQueuedPackages();
-		}
-		ZSteamSocket.ReceivePackages();
-	}
-
-	private static void ReceivePackages()
-	{
-		uint num;
-		while (SteamGameServerNetworking.IsP2PPacketAvailable(out num, 0))
-		{
-			byte[] array = new byte[num];
-			uint num2;
-			CSteamID sender;
-			if (!SteamGameServerNetworking.ReadP2PPacket(array, num, out num2, out sender, 0))
-			{
-				break;
-			}
-			ZSteamSocket.QueueNewPkg(sender, array);
+			zsteamSocket.Update();
 		}
 	}
 
-	private static void QueueNewPkg(CSteamID sender, byte[] data)
+	private void Update()
 	{
-		foreach (ZSteamSocket zsteamSocket in ZSteamSocket.m_sockets)
+		this.SendQueuedPackages();
+		if (this.m_con != HSteamNetConnection.Invalid)
 		{
-			if (zsteamSocket.IsPeer(sender))
+			SteamNetConnectionInfo_t steamNetConnectionInfo_t;
+			if (SteamGameServerNetworkingSockets.GetConnectionInfo(this.m_con, out steamNetConnectionInfo_t))
 			{
-				zsteamSocket.QueuePackage(data);
-				return;
+				if (steamNetConnectionInfo_t.m_eState != ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_Connecting && steamNetConnectionInfo_t.m_eState != ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_FindingRoute && steamNetConnectionInfo_t.m_eState != ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_Connected)
+				{
+					ZLog.Log("Bad socket state " + steamNetConnectionInfo_t.m_eState);
+					this.Close();
+					return;
+				}
+			}
+			else
+			{
+				ZLog.Log("Connection handle invalid");
+				this.Close();
 			}
 		}
-		ZSteamSocket listner = ZSteamSocket.GetListner();
-		if (listner != null)
-		{
-			ZLog.Log("Got package from unconnected peer " + sender);
-			listner.QueuePendingConnection(sender).QueuePackage(data);
-			return;
-		}
-		ZLog.Log("Got package from unkown peer " + sender + " but no active listner");
 	}
 
 	private static ZSteamSocket GetListner()
@@ -256,41 +298,63 @@ public class ZSteamSocket : IDisposable, ISocket
 		{
 			return null;
 		}
-		if (this.m_pkgQueue.Count > 0)
+		IntPtr[] array = new IntPtr[1];
+		if (SteamGameServerNetworkingSockets.ReceiveMessagesOnConnection(this.m_con, array, 1) == 1)
 		{
-			return this.m_pkgQueue.Dequeue();
+			SteamNetworkingMessage_t steamNetworkingMessage_t = Marshal.PtrToStructure<SteamNetworkingMessage_t>(array[0]);
+			byte[] array2 = new byte[steamNetworkingMessage_t.m_cbSize];
+			Marshal.Copy(steamNetworkingMessage_t.m_pData, array2, 0, steamNetworkingMessage_t.m_cbSize);
+			ZPackage zpackage = new ZPackage(array2);
+			steamNetworkingMessage_t.m_pfnRelease = array[0];
+			steamNetworkingMessage_t.Release();
+			this.m_totalRecv += zpackage.Size();
+			return zpackage;
 		}
 		return null;
 	}
 
 	public string GetEndPointString()
 	{
-		return this.m_peerID.ToString();
+		return this.m_peerID.GetSteamID().ToString();
 	}
 
 	public string GetHostName()
 	{
-		return this.m_peerID.ToString();
+		return this.m_peerID.GetSteamID().ToString();
 	}
 
 	public CSteamID GetPeerID()
 	{
-		return this.m_peerID;
-	}
-
-	public bool IsPeer(CSteamID peer)
-	{
-		return this.IsConnected() && peer == this.m_peerID;
+		return this.m_peerID.GetSteamID();
 	}
 
 	public bool IsHost()
 	{
-		return this.m_listner;
+		return ZSteamSocket.m_hostSocket != null;
 	}
 
 	public bool IsSending()
 	{
 		return this.IsConnected() && this.m_sendQueue.Count > 0;
+	}
+
+	public void GetConnectionQuality(out float localQuality, out float remoteQuality, out int ping, out float outByteSec, out float inByteSec)
+	{
+		SteamNetworkingQuickConnectionStatus steamNetworkingQuickConnectionStatus;
+		if (SteamNetworkingSockets.GetQuickConnectionStatus(this.m_con, out steamNetworkingQuickConnectionStatus))
+		{
+			localQuality = steamNetworkingQuickConnectionStatus.m_flConnectionQualityLocal;
+			remoteQuality = steamNetworkingQuickConnectionStatus.m_flConnectionQualityRemote;
+			ping = steamNetworkingQuickConnectionStatus.m_nPing;
+			outByteSec = steamNetworkingQuickConnectionStatus.m_flOutBytesPerSec;
+			inByteSec = steamNetworkingQuickConnectionStatus.m_flInBytesPerSec;
+			return;
+		}
+		localQuality = 0f;
+		remoteQuality = 0f;
+		ping = 0;
+		outByteSec = 0f;
+		inByteSec = 0f;
 	}
 
 	public void GetAndResetStats(out int totalSent, out int totalRecv)
@@ -319,15 +383,13 @@ public class ZSteamSocket : IDisposable, ISocket
 
 	private static List<ZSteamSocket> m_sockets = new List<ZSteamSocket>();
 
-	private static Callback<P2PSessionRequest_t> m_SessionRequest;
-
-	private static Callback<P2PSessionConnectFail_t> m_connectionFailed;
+	private static Callback<SteamNetConnectionStatusChangedCallback_t> m_statusChanged;
 
 	private Queue<ZSteamSocket> m_pendingConnections = new Queue<ZSteamSocket>();
 
-	private CSteamID m_peerID = CSteamID.Nil;
+	private HSteamNetConnection m_con = HSteamNetConnection.Invalid;
 
-	private bool m_listner;
+	private SteamNetworkingIdentity m_peerID;
 
 	private Queue<ZPackage> m_pkgQueue = new Queue<ZPackage>();
 
@@ -338,4 +400,10 @@ public class ZSteamSocket : IDisposable, ISocket
 	private int m_totalRecv;
 
 	private bool m_gotData;
+
+	private HSteamListenSocket m_listenSocket = HSteamListenSocket.Invalid;
+
+	private static ZSteamSocket m_hostSocket;
+
+	private static ESteamNetworkingConfigValue[] m_configValues = new ESteamNetworkingConfigValue[1];
 }

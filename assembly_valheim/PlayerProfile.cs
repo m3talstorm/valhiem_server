@@ -214,17 +214,10 @@ public class PlayerProfile
 		try
 		{
 			BinaryReader binaryReader = new BinaryReader(fileStream);
-			int num = binaryReader.ReadInt32();
-			data = binaryReader.ReadBytes(num);
-			int num2 = binaryReader.ReadInt32();
-			binaryReader.ReadBytes(num2);
-			ZLog.Log(string.Concat(new object[]
-			{
-				"Data size:",
-				num,
-				"  hash size:",
-				num2
-			}));
+			int count = binaryReader.ReadInt32();
+			data = binaryReader.ReadBytes(count);
+			int count2 = binaryReader.ReadInt32();
+			binaryReader.ReadBytes(count2);
 		}
 		catch
 		{
@@ -349,7 +342,6 @@ public class PlayerProfile
 		for (int i = 0; i < array2.Length; i++)
 		{
 			string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(array2[i]);
-			ZLog.Log("loading " + fileNameWithoutExtension);
 			PlayerProfile playerProfile = new PlayerProfile(fileNameWithoutExtension);
 			if (!playerProfile.Load())
 			{

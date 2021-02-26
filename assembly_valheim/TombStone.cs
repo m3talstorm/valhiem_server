@@ -120,6 +120,10 @@ public class TombStone : MonoBehaviour, Hoverable, Interactable
 
 	private void UpdateDespawn()
 	{
+		if (!this.m_nview.IsValid())
+		{
+			return;
+		}
 		if (this.m_floater != null)
 		{
 			this.UpdateFloater();

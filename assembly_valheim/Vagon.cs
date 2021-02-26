@@ -84,6 +84,10 @@ public class Vagon : MonoBehaviour, Hoverable, Interactable
 
 	private void FixedUpdate()
 	{
+		if (!this.m_nview.IsValid())
+		{
+			return;
+		}
 		this.UpdateAudio(Time.fixedDeltaTime);
 		if (this.m_nview.IsOwner())
 		{

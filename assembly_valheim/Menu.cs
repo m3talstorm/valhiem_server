@@ -24,7 +24,7 @@ public class Menu : MonoBehaviour
 
 	private void Update()
 	{
-		if (Game.instance.IsLoggingOut())
+		if (Game.instance.IsShuttingDown())
 		{
 			this.m_root.gameObject.SetActive(false);
 			return;

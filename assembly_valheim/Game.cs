@@ -79,22 +79,25 @@ public class Game : MonoBehaviour
 
 	public void Logout()
 	{
-		if (this.m_loggedOut)
+		if (this.m_shuttingDown)
 		{
 			return;
 		}
-		this.m_loggedOut = true;
 		this.Shutdown();
 		SceneManager.LoadScene("start");
 	}
 
-	public bool IsLoggingOut()
+	public bool IsShuttingDown()
 	{
-		return this.m_loggedOut;
+		return this.m_shuttingDown;
 	}
 
 	private void OnApplicationQuit()
 	{
+		if (this.m_shuttingDown)
+		{
+			return;
+		}
 		ZLog.Log("Game - OnApplicationQuit");
 		this.Shutdown();
 		Thread.Sleep(2000);
@@ -102,6 +105,11 @@ public class Game : MonoBehaviour
 
 	private void Shutdown()
 	{
+		if (this.m_shuttingDown)
+		{
+			return;
+		}
+		this.m_shuttingDown = true;
 		this.SavePlayerProfile(true);
 		ZNetScene.instance.Shutdown();
 		ZNet.instance.Shutdown();
@@ -581,7 +589,7 @@ public class Game : MonoBehaviour
 
 	private bool m_firstSpawn = true;
 
-	private bool m_loggedOut;
+	private bool m_shuttingDown;
 
 	private Vector3 m_randomStartPoint = Vector3.zero;
 

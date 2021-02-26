@@ -119,7 +119,7 @@ public class Hud : MonoBehaviour
 
 	private void UpdateBlackScreen(Player player, float dt)
 	{
-		if (!(player == null) && !player.IsDead() && !player.IsTeleporting() && !Game.instance.IsLoggingOut() && !player.IsSleeping())
+		if (!(player == null) && !player.IsDead() && !player.IsTeleporting() && !Game.instance.IsShuttingDown() && !player.IsSleeping())
 		{
 			this.m_haveSetupLoadScreen = false;
 			float fadeDuration = this.GetFadeDuration(player);
@@ -136,7 +136,7 @@ public class Hud : MonoBehaviour
 		float num2 = this.m_loadingScreen.alpha;
 		float fadeDuration2 = this.GetFadeDuration(player);
 		num2 = Mathf.MoveTowards(num2, 1f, dt / fadeDuration2);
-		if (Game.instance.IsLoggingOut())
+		if (Game.instance.IsShuttingDown())
 		{
 			num2 = 1f;
 		}

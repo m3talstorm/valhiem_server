@@ -69,19 +69,16 @@ public class ConnectPanel : MonoBehaviour
 			{
 				this.m_zdosInstances.text = ZNetScene.instance.NrOfInstances().ToString();
 			}
-			if (ZNtp.instance != null)
-			{
-				this.m_ntp.text = (ZNtp.instance.GetStatus() ? "OK" : "fail");
-			}
-			if (ZNet.instance != null && ZNet.instance.GetZNat() != null)
-			{
-				this.m_upnp.text = (ZNet.instance.GetZNat().GetStatus() ? "OK" : "fail");
-			}
-			int num3;
-			int num4;
-			ZNet.instance.GetNetStats(out num3, out num4);
-			this.m_dataSent.text = (num3 / 1024).ToString() + "kb/s";
-			this.m_dataRecv.text = (num4 / 1024).ToString() + "kb/s";
+			float num3;
+			float num4;
+			int num5;
+			float num6;
+			float num7;
+			ZNet.instance.GetNetStats(out num3, out num4, out num5, out num6, out num7);
+			this.m_dataSent.text = (num6 / 1024f).ToString("0.0") + "kb/s";
+			this.m_dataRecv.text = (num7 / 1024f).ToString("0.0") + "kb/s";
+			this.m_ping.text = num5.ToString("0") + "ms";
+			this.m_quality.text = ((int)(num3 * 100f)).ToString() + "% / " + ((int)(num4 * 100f)).ToString() + "%";
 			this.m_clientSendQueue.text = ZDOMan.instance.GetClientChangeQueue().ToString();
 			this.m_nrOfConnections.text = ZNet.instance.GetPeerConnections().ToString();
 			string text = "";
@@ -105,7 +102,7 @@ public class ConnectPanel : MonoBehaviour
 			}
 			this.m_connections.text = text;
 			List<ZNet.PlayerInfo> playerList = ZNet.instance.GetPlayerList();
-			float num5 = 16f;
+			float num8 = 16f;
 			if (playerList.Count != this.m_playerListElements.Count)
 			{
 				foreach (GameObject obj in this.m_playerListElements)
@@ -116,12 +113,12 @@ public class ConnectPanel : MonoBehaviour
 				for (int i = 0; i < playerList.Count; i++)
 				{
 					GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(this.m_playerElement, this.m_playerList);
-					(gameObject.transform as RectTransform).anchoredPosition = new Vector2(0f, (float)i * -num5);
+					(gameObject.transform as RectTransform).anchoredPosition = new Vector2(0f, (float)i * -num8);
 					this.m_playerListElements.Add(gameObject);
 				}
-				float num6 = (float)playerList.Count * num5;
-				num6 = Mathf.Max(this.m_playerListBaseSize, num6);
-				this.m_playerList.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, num6);
+				float num9 = (float)playerList.Count * num8;
+				num9 = Mathf.Max(this.m_playerListBaseSize, num9);
+				this.m_playerList.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, num9);
 				this.m_playerListScroll.value = 1f;
 			}
 			for (int j = 0; j < playerList.Count; j++)
@@ -227,6 +224,10 @@ public class ConnectPanel : MonoBehaviour
 	public Text m_fps;
 
 	public Text m_frameTime;
+
+	public Text m_ping;
+
+	public Text m_quality;
 
 	private float m_playerListBaseSize;
 

@@ -74,7 +74,7 @@ public class Piece : StaticTarget
 					while (j > 0)
 					{
 						ItemDrop component = UnityEngine.Object.Instantiate<GameObject>(gameObject, base.transform.position + Vector3.up, Quaternion.identity).GetComponent<ItemDrop>();
-						component.m_itemData.m_stack = Mathf.Min(j, component.m_itemData.m_shared.m_maxStackSize);
+						component.SetStack(Mathf.Min(j, component.m_itemData.m_shared.m_maxStackSize));
 						j -= component.m_itemData.m_stack;
 					}
 				}

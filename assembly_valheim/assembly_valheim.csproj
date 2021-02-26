@@ -302,6 +302,7 @@
     <Compile Include="StatusEffect.cs" />
     <Compile Include="StealthSystem.cs" />
     <Compile Include="SteamManager.cs" />
+    <Compile Include="SteamManager2.cs" />
     <Compile Include="StoreGui.cs" />
     <Compile Include="Switch.cs" />
     <Compile Include="Tail.cs" />
@@ -369,6 +370,7 @@
     <Compile Include="ZSocket2.cs" />
     <Compile Include="ZSteamMatchmaking.cs" />
     <Compile Include="ZSteamSocket.cs" />
+    <Compile Include="ZSteamSocketOLD.cs" />
     <Compile Include="ZSyncAnimation.cs" />
     <Compile Include="ZSyncTransform.cs" />
   </ItemGroup>
