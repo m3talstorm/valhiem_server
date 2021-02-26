@@ -547,7 +547,7 @@ public class Game : MonoBehaviour
 	public float GetDifficultyDamageScale(Vector3 pos)
 	{
 		int playerDifficulty = this.GetPlayerDifficulty(pos);
-		return 1f + (float)(playerDifficulty - 1) * 0.08f;
+		return 1f + (float)(playerDifficulty - 1) * 0.04f;
 	}
 
 	public float GetDifficultyHealthScale(Vector3 pos)
@@ -598,7 +598,7 @@ public class Game : MonoBehaviour
 
 	private const float m_difficultyScaleRange = 200f;
 
-	private const float m_damageScalePerPlayer = 0.08f;
+	private const float m_damageScalePerPlayer = 0.04f;
 
 	private const float m_healthScalePerPlayer = 0.4f;
 

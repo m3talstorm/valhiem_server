@@ -237,7 +237,7 @@ public class Settings : MonoBehaviour
 		AudioListener.volume = PlayerPrefs.GetFloat("MasterVolume", AudioListener.volume);
 		MusicMan.m_masterMusicVolume = PlayerPrefs.GetFloat("MusicVolume", 1f);
 		AudioMan.SetSFXVolume(PlayerPrefs.GetFloat("SfxVolume", 1f));
-		this.m_continousMusic.isOn = (PlayerPrefs.GetInt("ContinousMusic", 0) == 1);
+		this.m_continousMusic.isOn = (PlayerPrefs.GetInt("ContinousMusic", 1) == 1);
 		PlayerController.m_mouseSens = PlayerPrefs.GetFloat("MouseSensitivity", PlayerController.m_mouseSens);
 		PlayerController.m_invertMouse = (PlayerPrefs.GetInt("InvertMouse", 0) == 1);
 		float @float = PlayerPrefs.GetFloat("GuiScale", 1f);

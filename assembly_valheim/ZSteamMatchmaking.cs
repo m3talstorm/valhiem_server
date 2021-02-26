@@ -253,11 +253,7 @@ public class ZSteamMatchmaking
 
 	public void RequestServerlist()
 	{
-		if (this.m_friendsFilter)
-		{
-			this.RequestFriendGames();
-			return;
-		}
+		this.RequestFriendGames();
 		this.RequestPublicLobbies();
 		this.RequestDedicatedServers();
 	}
@@ -291,26 +287,28 @@ public class ZSteamMatchmaking
 	{
 		SteamAPICall_t hAPICall = SteamMatchmaking.RequestLobbyList();
 		this.m_lobbyMatchList.Set(hAPICall, null);
+		this.m_refreshingPublicGames = true;
 	}
 
 	private void RequestDedicatedServers()
 	{
-		if (!this.m_refreshingList)
+		if (!this.m_refreshingDedicatedServers)
 		{
 			if (this.m_haveListRequest)
 			{
 				SteamMatchmakingServers.ReleaseRequest(this.m_serverListRequest);
 				this.m_haveListRequest = false;
 			}
-			this.m_dedicatedServersTemp.Clear();
+			this.m_dedicatedServers.Clear();
 			this.m_serverListRequest = SteamMatchmakingServers.RequestInternetServerList(SteamUtils.GetAppID(), new MatchMakingKeyValuePair_t[0], 0U, this.m_steamServerCallbackHandler);
-			this.m_refreshingList = true;
+			this.m_refreshingDedicatedServers = true;
 			this.m_haveListRequest = true;
 		}
 	}
 
 	private void OnLobbyMatchList(LobbyMatchList_t data, bool ioError)
 	{
+		this.m_refreshingPublicGames = false;
 		this.m_matchmakingServers.Clear();
 		int num = 0;
 		while ((long)num < (long)((ulong)data.m_nLobbiesMatching))
@@ -332,10 +330,6 @@ public class ZSteamMatchmaking
 		bool password = SteamMatchmaking.GetLobbyData(lobbyID, "password") == "1";
 		string lobbyData2 = SteamMatchmaking.GetLobbyData(lobbyID, "version");
 		int numLobbyMembers = SteamMatchmaking.GetNumLobbyMembers(lobbyID);
-		if (this.m_nameFilter.Length > 0 && !lobbyData.Contains(this.m_nameFilter))
-		{
-			return null;
-		}
 		uint num;
 		ushort num2;
 		CSteamID that;
@@ -364,11 +358,27 @@ public class ZSteamMatchmaking
 	{
 		if (this.m_friendsFilter)
 		{
-			allServers.AddRange(this.m_friendServers);
+			this.FilterServers(this.m_friendServers, allServers);
 			return;
 		}
-		allServers.AddRange(this.m_matchmakingServers);
-		allServers.AddRange(this.m_dedicatedServers);
+		this.FilterServers(this.m_matchmakingServers, allServers);
+		this.FilterServers(this.m_dedicatedServers, allServers);
+	}
+
+	private void FilterServers(List<MasterClient.ServerData> input, List<MasterClient.ServerData> allServers)
+	{
+		string text = this.m_nameFilter.ToLowerInvariant();
+		foreach (MasterClient.ServerData serverData in input)
+		{
+			if (text.Length == 0 || serverData.m_name.ToLowerInvariant().Contains(text))
+			{
+				allServers.Add(serverData);
+			}
+			if (allServers.Count >= 200)
+			{
+				break;
+			}
+		}
 	}
 
 	public CSteamID GetJoinUserID()
@@ -382,22 +392,23 @@ public class ZSteamMatchmaking
 	{
 		gameserveritem_t serverDetails = SteamMatchmakingServers.GetServerDetails(request, iServer);
 		string serverName = serverDetails.GetServerName();
-		if (this.m_nameFilter.Length > 0 && !serverName.Contains(this.m_nameFilter))
-		{
-			return;
-		}
 		MasterClient.ServerData serverData = new MasterClient.ServerData();
 		serverData.m_name = serverName;
 		serverData.m_steamHostID = (ulong)serverDetails.m_steamID;
 		serverData.m_password = serverDetails.m_bPassword;
 		serverData.m_players = serverDetails.m_nPlayers;
 		serverData.m_version = serverDetails.GetGameTags();
-		this.m_dedicatedServersTemp.Add(serverData);
+		this.m_dedicatedServers.Add(serverData);
+		this.m_updateTriggerAccumulator++;
+		if (this.m_updateTriggerAccumulator > 100)
+		{
+			this.m_updateTriggerAccumulator = 0;
+			this.m_serverListRevision++;
+		}
 	}
 
 	private void OnServerFailedToRespond(HServerListRequest request, int iServer)
 	{
-		ZLog.Log("Server failed to respond");
 	}
 
 	private void OnRefreshComplete(HServerListRequest request, EMatchMakingServerResponse response)
@@ -405,25 +416,32 @@ public class ZSteamMatchmaking
 		ZLog.Log(string.Concat(new object[]
 		{
 			"Refresh complete ",
-			this.m_dedicatedServersTemp.Count,
+			this.m_dedicatedServers.Count,
 			"  ",
 			response
 		}));
-		this.m_dedicatedServers.Clear();
-		this.m_dedicatedServers.AddRange(this.m_dedicatedServersTemp);
-		this.m_dedicatedServersTemp.Clear();
-		this.m_refreshingList = false;
+		this.m_refreshingDedicatedServers = false;
 		this.m_serverListRevision++;
 	}
 
 	public void SetNameFilter(string filter)
 	{
+		if (this.m_nameFilter == filter)
+		{
+			return;
+		}
 		this.m_nameFilter = filter;
+		this.m_serverListRevision++;
 	}
 
 	public void SetFriendFilter(bool enabled)
 	{
+		if (this.m_friendsFilter == enabled)
+		{
+			return;
+		}
 		this.m_friendsFilter = enabled;
+		this.m_serverListRevision++;
 	}
 
 	public int GetServerListRevision()
@@ -431,17 +449,29 @@ public class ZSteamMatchmaking
 		return this.m_serverListRevision;
 	}
 
+	public bool IsUpdating()
+	{
+		return this.m_refreshingDedicatedServers || this.m_refreshingPublicGames;
+	}
+
+	public int GetTotalNrOfServers()
+	{
+		return this.m_matchmakingServers.Count + this.m_dedicatedServers.Count + this.m_friendServers.Count;
+	}
+
 	private static ZSteamMatchmaking m_instance;
+
+	private const int maxServers = 200;
 
 	private List<MasterClient.ServerData> m_matchmakingServers = new List<MasterClient.ServerData>();
 
 	private List<MasterClient.ServerData> m_dedicatedServers = new List<MasterClient.ServerData>();
 
-	private List<MasterClient.ServerData> m_dedicatedServersTemp = new List<MasterClient.ServerData>();
-
 	private List<MasterClient.ServerData> m_friendServers = new List<MasterClient.ServerData>();
 
 	private int m_serverListRevision;
+
+	private int m_updateTriggerAccumulator;
 
 	private CallResult<LobbyCreated_t> m_lobbyCreated;
 
@@ -481,7 +511,9 @@ public class ZSteamMatchmaking
 
 	private bool m_haveListRequest;
 
-	private bool m_refreshingList;
+	private bool m_refreshingDedicatedServers;
+
+	private bool m_refreshingPublicGames;
 
 	private string m_registerServerName = "";
 

@@ -46,7 +46,7 @@ public class MusicMan : MonoBehaviour
 
 	public void ApplySettings()
 	{
-		bool flag = PlayerPrefs.GetInt("ContinousMusic", 0) == 1;
+		bool flag = PlayerPrefs.GetInt("ContinousMusic", 1) == 1;
 		foreach (MusicMan.NamedMusic namedMusic in this.m_music)
 		{
 			if (namedMusic.m_ambientMusic)

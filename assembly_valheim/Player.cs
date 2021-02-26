@@ -1264,6 +1264,9 @@ public class Player : Humanoid
 				hitData.m_dir = Vector3.down;
 				hitData.m_pushForce = 10f;
 				base.Damage(hitData);
+				Vector3 position = base.transform.position;
+				position.y = this.m_waterLevel;
+				this.m_drownEffects.Create(position, base.transform.rotation, null, 1f);
 			}
 		}
 	}
@@ -3377,7 +3380,7 @@ public class Player : Humanoid
 		AnimatorStateInfo currentAnimatorStateInfo = this.m_animator.GetCurrentAnimatorStateInfo(0);
 		AnimatorStateInfo nextAnimatorStateInfo = this.m_animator.GetNextAnimatorStateInfo(0);
 		bool flag = this.m_animator.IsInTransition(0);
-		bool flag2 = (currentAnimatorStateInfo.tagHash == Player.m_animatorTagDodge && !flag) || (flag && nextAnimatorStateInfo.tagHash == Player.m_animatorTagDodge);
+		bool flag2 = this.m_animator.GetBool("dodge") || (currentAnimatorStateInfo.tagHash == Player.m_animatorTagDodge && !flag) || (flag && nextAnimatorStateInfo.tagHash == Player.m_animatorTagDodge);
 		bool value = flag2 && this.m_dodgeInvincible;
 		this.m_nview.GetZDO().Set("dodgeinv", value);
 		this.m_inDodge = flag2;
@@ -4514,6 +4517,8 @@ public class Player : Humanoid
 	public float m_hardDeathCooldown = 10f;
 
 	public float m_baseCameraShake = 4f;
+
+	public EffectList m_drownEffects = new EffectList();
 
 	public EffectList m_spawnEffects = new EffectList();
 

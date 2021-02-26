@@ -158,8 +158,6 @@ public class FejdStartup : MonoBehaviour
 	private bool ParseServerArguments()
 	{
 		string[] commandLineArgs = Environment.GetCommandLineArgs();
-		bool flag = true;
-		bool openServer = true;
 		string text = "Dedicated";
 		string password = "";
 		string text2 = "";
@@ -199,24 +197,20 @@ public class FejdStartup : MonoBehaviour
 				password = commandLineArgs[i + 1];
 				i++;
 			}
-			else if (a == "-public")
-			{
-				flag = (commandLineArgs[i + 1] == "1");
-			}
 		}
 		if (text2 == "")
 		{
 			text2 = text;
 		}
 		World createWorld = World.GetCreateWorld(text);
-		if (flag && !this.IsPublicPasswordValid(password, createWorld))
+		if (!this.IsPublicPasswordValid(password, createWorld))
 		{
 			string publicPasswordError = this.GetPublicPasswordError(password, createWorld);
 			ZLog.LogError("Error bad password:" + publicPasswordError);
 			Application.Quit();
 			return false;
 		}
-		ZNet.SetServer(true, openServer, flag, text2, password, createWorld);
+		ZNet.SetServer(true, true, true, text2, password, createWorld);
 		ZNet.SetServerHost("", 0);
 		SteamManager.SetServerPort(serverPort);
 		return true;
@@ -496,14 +490,13 @@ public class FejdStartup : MonoBehaviour
 		ZSteamMatchmaking.instance.SetNameFilter(this.m_filterInputField.text);
 		ZSteamMatchmaking.instance.SetFriendFilter(this.m_friendFilterSwitch.isOn);
 		PlayerPrefs.SetInt("publicfilter", this.m_publicFilterSwitch.isOn ? 1 : 0);
-		this.QueueServerListUpdate();
 	}
 
 	public void QueueServerListUpdate()
 	{
 		ZLog.DevLog("Queue serverlist");
 		base.CancelInvoke("RequestServerList");
-		base.Invoke("RequestServerList", 0.5f);
+		base.Invoke("RequestServerList", 1f);
 		this.m_serverRefreshButton.interactable = false;
 	}
 
@@ -514,6 +507,8 @@ public class FejdStartup : MonoBehaviour
 
 	private void UpdateServerList()
 	{
+		this.m_serverRefreshButton.interactable = !ZSteamMatchmaking.instance.IsUpdating();
+		this.m_serverCount.text = this.m_serverListElements.Count.ToString() + " / " + ZSteamMatchmaking.instance.GetTotalNrOfServers();
 		if (this.m_serverListRevision == ZSteamMatchmaking.instance.GetServerListRevision())
 		{
 			return;
@@ -534,13 +529,11 @@ public class FejdStartup : MonoBehaviour
 				this.m_joinServer = null;
 			}
 		}
-		this.UpdateServerListGui(true);
+		this.UpdateServerListGui(false);
 	}
 
 	private void UpdateServerListGui(bool centerSelection)
 	{
-		this.m_serverCount.text = this.m_serverListElements.Count.ToString();
-		this.m_serverRefreshButton.interactable = true;
 		if (this.m_serverList.Count != this.m_serverListElements.Count)
 		{
 			foreach (GameObject obj in this.m_serverListElements)

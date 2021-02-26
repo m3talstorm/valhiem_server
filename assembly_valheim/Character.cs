@@ -1038,11 +1038,15 @@ public class Character : MonoBehaviour, IDestructible, Hoverable, IWaterInteract
 			num -= totalDamage;
 			this.SetHealth(num);
 		}
-		this.AddStaggerDamage(totalDamage * hit.m_staggerMultiplier, hit.m_dir);
+		float totalPhysicalDamage = hit.m_damage.GetTotalPhysicalDamage();
+		this.AddStaggerDamage(totalPhysicalDamage * hit.m_staggerMultiplier, hit.m_dir);
 		if (triggerEffects && totalDamage > 2f)
 		{
 			this.DoDamageCameraShake(hit);
-			this.m_hitEffects.Create(hit.m_point, Quaternion.identity, base.transform, 1f);
+			if (hit.m_damage.GetTotalPhysicalDamage() > 0f)
+			{
+				this.m_hitEffects.Create(hit.m_point, Quaternion.identity, base.transform, 1f);
+			}
 		}
 		this.OnDamaged(hit);
 		if (this.m_onDamaged != null)
@@ -2518,7 +2522,7 @@ public class Character : MonoBehaviour, IDestructible, Hoverable, IWaterInteract
 
 	protected float m_maxAirAltitude = -10000f;
 
-	private float m_waterLevel = -10000f;
+	protected float m_waterLevel = -10000f;
 
 	private float m_swimTimer = 999f;
 

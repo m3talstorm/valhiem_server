@@ -90,9 +90,9 @@ internal class Version
 
 	public static int m_major = 0;
 
-	public static int m_minor = 141;
+	public static int m_minor = 142;
 
-	public static int m_patch = 2;
+	public static int m_patch = 5;
 
 	public static int m_playerVersion = 32;
 
