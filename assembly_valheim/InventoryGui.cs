@@ -449,7 +449,7 @@ public class InventoryGui : MonoBehaviour
 		{
 			this.m_openInventoryEffects.Create(localPlayer.transform.position, Quaternion.identity, null, 1f);
 		}
-		GoogleAnalyticsV4.instance.LogEvent("Screen", "Enter", "Inventory", 0L);
+		Gogan.LogEvent("Screen", "Enter", "Inventory", 0L);
 	}
 
 	public void Hide()
@@ -475,7 +475,7 @@ public class InventoryGui : MonoBehaviour
 		{
 			this.m_closeInventoryEffects.Create(Player.m_localPlayer.transform.position, Quaternion.identity, null, 1f);
 		}
-		GoogleAnalyticsV4.instance.LogEvent("Screen", "Exit", "Inventory", 0L);
+		Gogan.LogEvent("Screen", "Exit", "Inventory", 0L);
 	}
 
 	private void CloseContainer()
@@ -1001,7 +1001,7 @@ public class InventoryGui : MonoBehaviour
 			this.m_craftItemDoneEffects.Create(player.transform.position, Quaternion.identity, null, 1f);
 		}
 		Game.instance.GetPlayerProfile().m_playerStats.m_crafts++;
-		GoogleAnalyticsV4.instance.LogEvent("Game", "Crafted", this.m_craftRecipe.m_item.m_itemData.m_shared.m_name, (long)num);
+		Gogan.LogEvent("Game", "Crafted", this.m_craftRecipe.m_item.m_itemData.m_shared.m_name, (long)num);
 	}
 
 	private int FindSelectedRecipe(GameObject button)
@@ -1227,7 +1227,7 @@ public class InventoryGui : MonoBehaviour
 			return;
 		}
 		this.m_skillsDialog.Setup(Player.m_localPlayer);
-		GoogleAnalyticsV4.instance.LogEvent("Screen", "Enter", "Skills", 0L);
+		Gogan.LogEvent("Screen", "Enter", "Skills", 0L);
 	}
 
 	public void OnOpenTexts()
@@ -1237,14 +1237,14 @@ public class InventoryGui : MonoBehaviour
 			return;
 		}
 		this.m_textsDialog.Setup(Player.m_localPlayer);
-		GoogleAnalyticsV4.instance.LogEvent("Screen", "Enter", "Texts", 0L);
+		Gogan.LogEvent("Screen", "Enter", "Texts", 0L);
 	}
 
 	public void OnOpenTrophies()
 	{
 		this.m_trophiesPanel.SetActive(true);
 		this.UpdateTrophyList();
-		GoogleAnalyticsV4.instance.LogEvent("Screen", "Enter", "Trophies", 0L);
+		Gogan.LogEvent("Screen", "Enter", "Trophies", 0L);
 	}
 
 	public void OnCloseTrophies()
@@ -1301,7 +1301,7 @@ public class InventoryGui : MonoBehaviour
 	public void OnShowVariantSelection()
 	{
 		this.m_variantDialog.Setup(this.m_selectedRecipe.Key.m_item.m_itemData);
-		GoogleAnalyticsV4.instance.LogEvent("Screen", "Enter", "VariantSelection", 0L);
+		Gogan.LogEvent("Screen", "Enter", "VariantSelection", 0L);
 	}
 
 	private void OnVariantSelected(int index)

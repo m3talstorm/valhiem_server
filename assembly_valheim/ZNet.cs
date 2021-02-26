@@ -88,7 +88,7 @@ public class ZNet : MonoBehaviour
 	public void Shutdown()
 	{
 		ZLog.Log("ZNet Shutdown");
-		this.Save();
+		this.Save(true);
 		this.StopAll();
 		base.enabled = false;
 	}
@@ -396,6 +396,7 @@ public class ZNet : MonoBehaviour
 			rpc.Register<string>("Kick", new Action<ZRpc, string>(this.RPC_Kick));
 			rpc.Register<string>("Ban", new Action<ZRpc, string>(this.RPC_Ban));
 			rpc.Register<string>("Unban", new Action<ZRpc, string>(this.RPC_Unban));
+			rpc.Register("Save", new ZRpc.RpcMethod.Method(this.RPC_Save));
 			rpc.Register("PrintBanned", new ZRpc.RpcMethod.Method(this.RPC_PrintBanned));
 		}
 		else
@@ -595,16 +596,41 @@ public class ZNet : MonoBehaviour
 		}
 	}
 
-	public void Save()
+	public void ConsoleSave()
 	{
-		if (ZoneSystem.instance.SkipSaving() || DungeonDB.instance.SkipSaving())
+		if (this.IsServer())
+		{
+			this.RPC_Save(null);
+			return;
+		}
+		ZRpc serverRPC = this.GetServerRPC();
+		if (serverRPC != null)
+		{
+			serverRPC.Invoke("Save", Array.Empty<object>());
+		}
+	}
+
+	private void RPC_Save(ZRpc rpc)
+	{
+		if (rpc != null && !this.m_adminList.Contains(rpc.GetSocket().GetHostName()))
+		{
+			this.RemotePrint(rpc, "You are not admin");
+			return;
+		}
+		this.RemotePrint(rpc, "Saving..");
+		this.Save(false);
+	}
+
+	public void Save(bool sync)
+	{
+		if (this.m_loadError || ZoneSystem.instance.SkipSaving() || DungeonDB.instance.SkipSaving())
 		{
 			ZLog.LogWarning("Skipping world save");
 			return;
 		}
 		if (ZNet.m_isServer && ZNet.m_world != null)
 		{
-			this.SaveWorldAsync();
+			this.SaveWorld(sync);
 		}
 	}
 
@@ -756,7 +782,7 @@ public class ZNet : MonoBehaviour
 		return new List<ZNetPeer>(this.m_peers);
 	}
 
-	private void SaveWorldAsync()
+	private void SaveWorld(bool sync)
 	{
 		if (this.m_saveThread != null && this.m_saveThread.IsAlive)
 		{
@@ -770,6 +796,11 @@ public class ZNet : MonoBehaviour
 		this.m_saveThreadStartTime = Time.realtimeSinceStartup;
 		this.m_saveThread = new Thread(new ThreadStart(this.SaveWorldThread));
 		this.m_saveThread.Start();
+		if (sync)
+		{
+			this.m_saveThread.Join();
+			this.m_saveThread = null;
+		}
 	}
 
 	private void UpdateSave()
@@ -794,33 +825,33 @@ public class ZNet : MonoBehaviour
 	{
 		DateTime now = DateTime.Now;
 		string dbpath = ZNet.m_world.GetDBPath();
-		string text = dbpath + ".backup";
-		if (File.Exists(dbpath))
-		{
-			if (File.Exists(text))
-			{
-				File.Delete(text);
-			}
-			File.Move(dbpath, text);
-		}
-		FileStream fileStream = File.Create(dbpath);
+		string text = dbpath + ".new";
+		string text2 = dbpath + ".old";
+		FileStream fileStream = File.Create(text);
 		BinaryWriter binaryWriter = new BinaryWriter(fileStream);
 		binaryWriter.Write(global::Version.m_worldVersion);
 		binaryWriter.Write(this.m_netTime);
 		this.m_zdoMan.SaveAsync(binaryWriter);
 		ZoneSystem.instance.SaveASync(binaryWriter);
 		RandEventSystem.instance.SaveAsync(binaryWriter);
-		binaryWriter.Close();
+		binaryWriter.Flush();
+		fileStream.Flush(true);
+		fileStream.Close();
 		fileStream.Dispose();
 		ZNet.m_world.SaveWorldMetaData();
-		if (File.Exists(text))
+		if (File.Exists(dbpath))
 		{
-			File.Delete(text);
+			if (File.Exists(text2))
+			{
+				File.Delete(text2);
+			}
+			File.Move(dbpath, text2);
 		}
+		File.Move(text, dbpath);
 		ZLog.Log("World saved ( " + (DateTime.Now - now).TotalMilliseconds.ToString() + "ms )");
 	}
 
-	private bool LoadWorld()
+	private void LoadWorld()
 	{
 		ZLog.Log("Load world " + ZNet.m_world.m_name);
 		string dbpath = ZNet.m_world.GetDBPath();
@@ -832,52 +863,48 @@ public class ZNet : MonoBehaviour
 		catch
 		{
 			ZLog.Log("  missing world.dat");
-			return false;
+			return;
 		}
 		BinaryReader binaryReader = new BinaryReader(fileStream);
-		int num;
-		if (!this.CheckDataVersion(binaryReader, out num))
+		try
 		{
-			ZLog.Log("  incompatible data version " + num);
+			int num;
+			if (!this.CheckDataVersion(binaryReader, out num))
+			{
+				ZLog.Log("  incompatible data version " + num);
+				binaryReader.Close();
+				fileStream.Dispose();
+				return;
+			}
+			if (num >= 4)
+			{
+				this.m_netTime = binaryReader.ReadDouble();
+			}
+			this.m_zdoMan.Load(binaryReader, num);
+			if (num >= 12)
+			{
+				ZoneSystem.instance.Load(binaryReader, num);
+			}
+			if (num >= 15)
+			{
+				RandEventSystem.instance.Load(binaryReader, num);
+			}
 			binaryReader.Close();
 			fileStream.Dispose();
-			return false;
 		}
-		if (num >= 4)
+		catch (Exception ex)
 		{
-			this.m_netTime = binaryReader.ReadDouble();
+			ZLog.LogError("Exception while loading world " + dbpath + ":" + ex.ToString());
+			this.m_loadError = true;
+			Application.Quit();
 		}
-		this.m_zdoMan.Load(binaryReader, num);
-		if (num >= 12)
-		{
-			ZoneSystem.instance.Load(binaryReader, num);
-		}
-		if (num >= 15)
-		{
-			RandEventSystem.instance.Load(binaryReader, num);
-		}
-		binaryReader.Close();
-		fileStream.Dispose();
 		GC.Collect();
-		return true;
 	}
 
 	private bool CheckDataVersion(BinaryReader reader, out int version)
 	{
-		try
-		{
-			version = reader.ReadInt32();
-			if (!global::Version.IsWorldVersionCompatible(version))
-			{
-				return false;
-			}
-		}
-		catch
-		{
-			version = 0;
-			return false;
-		}
-		return true;
+		version = reader.ReadInt32();
+		return global::Version.IsWorldVersionCompatible(version);
 	}
 
 	public int GetHostPort()
@@ -1515,6 +1542,8 @@ public class ZNet : MonoBehaviour
 	private float m_saveStartTime;
 
 	private float m_saveThreadStartTime;
+
+	private bool m_loadError;
 
 	private ZDOMan m_zdoMan;
 

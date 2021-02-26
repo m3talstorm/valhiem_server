@@ -150,13 +150,26 @@ public class World
 		zpackage.Write(this.m_worldGenVersion);
 		Directory.CreateDirectory(this.m_worldSavePath);
 		string metaPath = this.GetMetaPath();
+		string text = metaPath + ".new";
+		string text2 = metaPath + ".old";
 		byte[] array = zpackage.GetArray();
-		FileStream fileStream = File.Create(metaPath);
+		FileStream fileStream = File.Create(text);
 		BinaryWriter binaryWriter = new BinaryWriter(fileStream);
 		binaryWriter.Write(array.Length);
 		binaryWriter.Write(array);
-		binaryWriter.Close();
+		binaryWriter.Flush();
+		fileStream.Flush(true);
+		fileStream.Close();
 		fileStream.Dispose();
+		if (File.Exists(metaPath))
+		{
+			if (File.Exists(text2))
+			{
+				File.Delete(text2);
+			}
+			File.Move(metaPath, text2);
+		}
+		File.Move(text, metaPath);
 	}
 
 	public static World LoadWorld(string name)

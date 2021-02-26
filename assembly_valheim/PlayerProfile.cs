@@ -71,7 +71,9 @@ public class PlayerProfile
 	private bool SavePlayerToDisk()
 	{
 		Directory.CreateDirectory(Utils.GetSaveDataPath() + "/characters");
-		string path = Utils.GetSaveDataPath() + "/characters/" + this.m_filename + ".fch";
+		string text = Utils.GetSaveDataPath() + "/characters/" + this.m_filename + ".fch";
+		string text2 = Utils.GetSaveDataPath() + "/characters/" + this.m_filename + ".fch.old";
+		string text3 = Utils.GetSaveDataPath() + "/characters/" + this.m_filename + ".fch.new";
 		ZPackage zpackage = new ZPackage();
 		zpackage.Write(global::Version.m_playerVersion);
 		zpackage.Write(this.m_playerStats.m_kills);
@@ -109,14 +111,25 @@ public class PlayerProfile
 		}
 		byte[] array = zpackage.GenerateHash();
 		byte[] array2 = zpackage.GetArray();
-		FileStream fileStream = File.Create(path);
+		FileStream fileStream = File.Create(text3);
 		BinaryWriter binaryWriter = new BinaryWriter(fileStream);
 		binaryWriter.Write(array2.Length);
 		binaryWriter.Write(array2);
 		binaryWriter.Write(array.Length);
 		binaryWriter.Write(array);
-		binaryWriter.Close();
+		binaryWriter.Flush();
+		fileStream.Flush(true);
+		fileStream.Close();
 		fileStream.Dispose();
+		if (File.Exists(text))
+		{
+			if (File.Exists(text2))
+			{
+				File.Delete(text2);
+			}
+			File.Move(text, text2);
+		}
+		File.Move(text3, text);
 		return true;
 	}
 

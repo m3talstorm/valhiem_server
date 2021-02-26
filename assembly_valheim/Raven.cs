@@ -71,11 +71,11 @@ public class Raven : MonoBehaviour, Hoverable, Interactable, IDestructible
 		if (this.m_currentText.m_key.Length > 0)
 		{
 			Player.m_localPlayer.SetSeenTutorial(this.m_currentText.m_key);
-			GoogleAnalyticsV4.instance.LogEvent("Game", "Raven", this.m_currentText.m_key, 0L);
+			Gogan.LogEvent("Game", "Raven", this.m_currentText.m_key, 0L);
 		}
 		else
 		{
-			GoogleAnalyticsV4.instance.LogEvent("Game", "Raven", this.m_currentText.m_topic, 0L);
+			Gogan.LogEvent("Game", "Raven", this.m_currentText.m_topic, 0L);
 		}
 		this.m_hasTalked = true;
 		if (this.m_currentText.m_label.Length > 0)

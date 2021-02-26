@@ -153,7 +153,7 @@ public class Console : MonoBehaviour
 		{
 			this.m_cheat = !this.m_cheat;
 			this.AddString("Cheats: " + this.m_cheat.ToString());
-			GoogleAnalyticsV4.instance.LogEvent("Cheat", "CheatsEnabled", this.m_cheat.ToString(), 0L);
+			Gogan.LogEvent("Cheat", "CheatsEnabled", this.m_cheat.ToString(), 0L);
 			return;
 		}
 		if (array[0] == "hidebetatext" && Hud.instance)
@@ -242,397 +242,390 @@ public class Console : MonoBehaviour
 					ZNet.instance.PrintBanned();
 					return;
 				}
-			}
-			if (ZNet.instance && ZNet.instance.IsServer() && Player.m_localPlayer)
-			{
-				if (array[0] == "save")
+				if (array.Length != 0 && array[0] == "save")
 				{
-					if (ZNet.instance)
+					ZNet.instance.ConsoleSave();
+				}
+			}
+			if (ZNet.instance && ZNet.instance.IsServer() && Player.m_localPlayer && this.IsCheatsEnabled())
+			{
+				if (array[0] == "genloc")
+				{
+					ZoneSystem.instance.GenerateLocations();
+					return;
+				}
+				if (array[0] == "players" && array.Length >= 2)
+				{
+					int num3;
+					if (int.TryParse(array[1], out num3))
 					{
-						ZNet.instance.Save();
+						Game.instance.SetForcePlayerDifficulty(num3);
+						this.Print("Setting players to " + num3);
 					}
 					return;
 				}
-				if (this.IsCheatsEnabled())
+				if (array[0] == "setkey")
 				{
-					if (array[0] == "genloc")
+					if (array.Length >= 2)
 					{
-						ZoneSystem.instance.GenerateLocations();
+						ZoneSystem.instance.SetGlobalKey(array[1]);
+						this.Print("Setting global key " + array[1]);
+					}
+					else
+					{
+						this.Print("Syntax: setkey [key]");
+					}
+				}
+				if (array[0] == "resetkeys")
+				{
+					ZoneSystem.instance.ResetGlobalKeys();
+					this.Print("Global keys cleared");
+				}
+				if (array[0] == "listkeys")
+				{
+					List<string> globalKeys = ZoneSystem.instance.GetGlobalKeys();
+					this.Print("Keys " + globalKeys.Count);
+					foreach (string text2 in globalKeys)
+					{
+						this.Print(text2);
+					}
+				}
+				if (array[0] == "debugmode")
+				{
+					Player.m_debugMode = !Player.m_debugMode;
+					this.Print("Debugmode " + Player.m_debugMode.ToString());
+				}
+				if (array[0] == "raiseskill")
+				{
+					if (array.Length > 2)
+					{
+						string name = array[1];
+						int num4 = int.Parse(array[2]);
+						Player.m_localPlayer.GetSkills().CheatRaiseSkill(name, (float)num4);
 						return;
 					}
-					if (array[0] == "players" && array.Length >= 2)
+					this.Print("Syntax: raiseskill [skill] [amount]");
+					return;
+				}
+				else if (array[0] == "resetskill")
+				{
+					if (array.Length > 1)
 					{
-						int num3;
-						if (int.TryParse(array[1], out num3))
-						{
-							Game.instance.SetForcePlayerDifficulty(num3);
-							this.Print("Setting players to " + num3);
-						}
+						string name2 = array[1];
+						Player.m_localPlayer.GetSkills().CheatResetSkill(name2);
 						return;
 					}
-					if (array[0] == "setkey")
+					this.Print("Syntax: resetskill [skill]");
+					return;
+				}
+				else
+				{
+					if (text == "sleep")
 					{
-						if (array.Length >= 2)
-						{
-							ZoneSystem.instance.SetGlobalKey(array[1]);
-							this.Print("Setting global key " + array[1]);
-						}
-						else
-						{
-							this.Print("Syntax: setkey [key]");
-						}
-					}
-					if (array[0] == "resetkeys")
-					{
-						ZoneSystem.instance.ResetGlobalKeys();
-						this.Print("Global keys cleared");
-					}
-					if (array[0] == "listkeys")
-					{
-						List<string> globalKeys = ZoneSystem.instance.GetGlobalKeys();
-						this.Print("Keys " + globalKeys.Count);
-						foreach (string text2 in globalKeys)
-						{
-							this.Print(text2);
-						}
-					}
-					if (array[0] == "debugmode")
-					{
-						Player.m_debugMode = !Player.m_debugMode;
-						this.Print("Debugmode " + Player.m_debugMode.ToString());
-					}
-					if (array[0] == "raiseskill")
-					{
-						if (array.Length > 2)
-						{
-							string name = array[1];
-							int num4 = int.Parse(array[2]);
-							Player.m_localPlayer.GetSkills().CheatRaiseSkill(name, (float)num4);
-							return;
-						}
-						this.Print("Syntax: raiseskill [skill] [amount]");
+						EnvMan.instance.SkipToMorning();
 						return;
 					}
-					else if (array[0] == "resetskill")
+					if (array[0] == "skiptime")
 					{
+						double num5 = ZNet.instance.GetTimeSeconds();
+						float num6 = 240f;
 						if (array.Length > 1)
 						{
-							string name2 = array[1];
-							Player.m_localPlayer.GetSkills().CheatResetSkill(name2);
+							num6 = float.Parse(array[1]);
+						}
+						num5 += (double)num6;
+						ZNet.instance.SetNetTime(num5);
+						this.Print(string.Concat(new object[]
+						{
+							"Skipping ",
+							num6.ToString("0"),
+							"s , Day:",
+							EnvMan.instance.GetDay(num5)
+						}));
+						return;
+					}
+					if (text == "resetcharacter")
+					{
+						this.AddString("Reseting character");
+						Player.m_localPlayer.ResetCharacter();
+						return;
+					}
+					if (array[0] == "randomevent")
+					{
+						RandEventSystem.instance.StartRandomEvent();
+					}
+					if (text.StartsWith("event "))
+					{
+						if (array.Length <= 1)
+						{
 							return;
 						}
-						this.Print("Syntax: resetskill [skill]");
+						string text3 = text.Substring(6);
+						if (!RandEventSystem.instance.HaveEvent(text3))
+						{
+							this.Print("Random event not found:" + text3);
+							return;
+						}
+						RandEventSystem.instance.SetRandomEventByName(text3, Player.m_localPlayer.transform.position);
 						return;
 					}
 					else
 					{
-						if (text == "sleep")
+						if (array[0] == "stopevent")
 						{
-							EnvMan.instance.SkipToMorning();
+							RandEventSystem.instance.ResetRandomEvent();
 							return;
 						}
-						if (array[0] == "skiptime")
+						if (text.StartsWith("removedrops"))
 						{
-							double num5 = ZNet.instance.GetTimeSeconds();
-							float num6 = 240f;
-							if (array.Length > 1)
+							this.AddString("Removing item drops");
+							ItemDrop[] array2 = UnityEngine.Object.FindObjectsOfType<ItemDrop>();
+							for (int i = 0; i < array2.Length; i++)
 							{
-								num6 = float.Parse(array[1]);
+								ZNetView component = array2[i].GetComponent<ZNetView>();
+								if (component)
+								{
+									component.Destroy();
+								}
 							}
-							num5 += (double)num6;
-							ZNet.instance.SetNetTime(num5);
-							this.Print(string.Concat(new object[]
-							{
-								"Skipping ",
-								num6.ToString("0"),
-								"s , Day:",
-								EnvMan.instance.GetDay(num5)
-							}));
+						}
+						if (text.StartsWith("freefly"))
+						{
+							this.Print("Toggling free fly camera");
+							GameCamera.instance.ToggleFreeFly();
 							return;
 						}
-						if (text == "resetcharacter")
-						{
-							this.AddString("Reseting character");
-							Player.m_localPlayer.ResetCharacter();
-							return;
-						}
-						if (array[0] == "randomevent")
-						{
-							RandEventSystem.instance.StartRandomEvent();
-						}
-						if (text.StartsWith("event "))
+						if (array[0] == "ffsmooth")
 						{
 							if (array.Length <= 1)
 							{
+								this.Print(GameCamera.instance.GetFreeFlySmoothness().ToString());
 								return;
 							}
-							string text3 = text.Substring(6);
-							if (!RandEventSystem.instance.HaveEvent(text3))
+							float num7;
+							if (!float.TryParse(array[1], NumberStyles.Float, CultureInfo.InvariantCulture, out num7))
 							{
-								this.Print("Random event not found:" + text3);
+								this.Print("syntax error");
 								return;
 							}
-							RandEventSystem.instance.SetRandomEventByName(text3, Player.m_localPlayer.transform.position);
+							this.Print("Setting free fly camera smoothing:" + num7);
+							GameCamera.instance.SetFreeFlySmoothness(num7);
 							return;
 						}
 						else
 						{
-							if (array[0] == "stopevent")
-							{
-								RandEventSystem.instance.ResetRandomEvent();
-								return;
-							}
-							if (text.StartsWith("removedrops"))
-							{
-								this.AddString("Removing item drops");
-								ItemDrop[] array2 = UnityEngine.Object.FindObjectsOfType<ItemDrop>();
-								for (int i = 0; i < array2.Length; i++)
-								{
-									ZNetView component = array2[i].GetComponent<ZNetView>();
-									if (component)
-									{
-										component.Destroy();
-									}
-								}
-							}
-							if (text.StartsWith("freefly"))
-							{
-								this.Print("Toggling free fly camera");
-								GameCamera.instance.ToggleFreeFly();
-								return;
-							}
-							if (array[0] == "ffsmooth")
+							if (text.StartsWith("location "))
 							{
 								if (array.Length <= 1)
 								{
-									this.Print(GameCamera.instance.GetFreeFlySmoothness().ToString());
 									return;
 								}
-								float num7;
-								if (!float.TryParse(array[1], NumberStyles.Float, CultureInfo.InvariantCulture, out num7))
+								string name3 = text.Substring(9);
+								Vector3 pos = Player.m_localPlayer.transform.position + Player.m_localPlayer.transform.forward * 10f;
+								ZoneSystem.instance.TestSpawnLocation(name3, pos);
+							}
+							if (array[0] == "spawn")
+							{
+								if (array.Length <= 1)
 								{
-									this.Print("syntax error");
 									return;
 								}
-								this.Print("Setting free fly camera smoothing:" + num7);
-								GameCamera.instance.SetFreeFlySmoothness(num7);
+								string text4 = array[1];
+								int num8 = (array.Length >= 3) ? int.Parse(array[2]) : 1;
+								int num9 = (array.Length >= 4) ? int.Parse(array[3]) : 1;
+								GameObject prefab = ZNetScene.instance.GetPrefab(text4);
+								if (!prefab)
+								{
+									Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, "Missing object " + text4, 0, null);
+									return;
+								}
+								DateTime now = DateTime.Now;
+								if (num8 == 1)
+								{
+									Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, "Spawning object " + text4, 0, null);
+									Character component2 = UnityEngine.Object.Instantiate<GameObject>(prefab, Player.m_localPlayer.transform.position + Player.m_localPlayer.transform.forward * 2f + Vector3.up, Quaternion.identity).GetComponent<Character>();
+									if (component2 & num9 > 1)
+									{
+										component2.SetLevel(num9);
+									}
+								}
+								else
+								{
+									for (int j = 0; j < num8; j++)
+									{
+										Vector3 b = UnityEngine.Random.insideUnitSphere * 0.5f;
+										Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, "Spawning object " + text4, 0, null);
+										Character component3 = UnityEngine.Object.Instantiate<GameObject>(prefab, Player.m_localPlayer.transform.position + Player.m_localPlayer.transform.forward * 2f + Vector3.up + b, Quaternion.identity).GetComponent<Character>();
+										if (component3 & num9 > 1)
+										{
+											component3.SetLevel(num9);
+										}
+									}
+								}
+								ZLog.Log("Spawn time :" + (DateTime.Now - now).TotalMilliseconds + " ms");
+								Gogan.LogEvent("Cheat", "Spawn", text4, (long)num8);
 								return;
 							}
 							else
 							{
-								if (text.StartsWith("location "))
+								if (array[0] == "pos")
 								{
-									if (array.Length <= 1)
+									Player localPlayer = Player.m_localPlayer;
+									if (localPlayer)
 									{
-										return;
+										this.AddString("Player position (X,Y,Z):" + localPlayer.transform.position.ToString("F0"));
 									}
-									string name3 = text.Substring(9);
-									Vector3 pos = Player.m_localPlayer.transform.position + Player.m_localPlayer.transform.forward * 10f;
-									ZoneSystem.instance.TestSpawnLocation(name3, pos);
 								}
-								if (array[0] == "spawn")
+								if (text.StartsWith("goto "))
 								{
-									if (array.Length <= 1)
+									string text5 = text.Substring(5);
+									char[] separator = new char[]
 									{
+										',',
+										' '
+									};
+									string[] array3 = text5.Split(separator);
+									if (array3.Length < 2)
+									{
+										this.AddString("Syntax /goto x,y");
 										return;
 									}
-									string text4 = array[1];
-									int num8 = (array.Length >= 3) ? int.Parse(array[2]) : 1;
-									int num9 = (array.Length >= 4) ? int.Parse(array[3]) : 1;
-									GameObject prefab = ZNetScene.instance.GetPrefab(text4);
-									if (!prefab)
+									try
 									{
-										Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, "Missing object " + text4, 0, null);
-										return;
-									}
-									DateTime now = DateTime.Now;
-									if (num8 == 1)
-									{
-										Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, "Spawning object " + text4, 0, null);
-										Character component2 = UnityEngine.Object.Instantiate<GameObject>(prefab, Player.m_localPlayer.transform.position + Player.m_localPlayer.transform.forward * 2f + Vector3.up, Quaternion.identity).GetComponent<Character>();
-										if (component2 & num9 > 1)
+										float x = float.Parse(array3[0]);
+										float z = float.Parse(array3[1]);
+										Player localPlayer2 = Player.m_localPlayer;
+										if (localPlayer2)
 										{
-											component2.SetLevel(num9);
+											Vector3 pos2 = new Vector3(x, localPlayer2.transform.position.y, z);
+											localPlayer2.TeleportTo(pos2, localPlayer2.transform.rotation, true);
 										}
 									}
-									else
+									catch (Exception ex)
 									{
-										for (int j = 0; j < num8; j++)
-										{
-											Vector3 b = UnityEngine.Random.insideUnitSphere * 0.5f;
-											Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, "Spawning object " + text4, 0, null);
-											Character component3 = UnityEngine.Object.Instantiate<GameObject>(prefab, Player.m_localPlayer.transform.position + Player.m_localPlayer.transform.forward * 2f + Vector3.up + b, Quaternion.identity).GetComponent<Character>();
-											if (component3 & num9 > 1)
-											{
-												component3.SetLevel(num9);
-											}
-										}
+										ZLog.Log("parse error:" + ex.ToString() + "  " + text5);
 									}
-									ZLog.Log("Spawn time :" + (DateTime.Now - now).TotalMilliseconds + " ms");
-									GoogleAnalyticsV4.instance.LogEvent("Cheat", "Spawn", text4, (long)num8);
+									Gogan.LogEvent("Cheat", "Goto", "", 0L);
 									return;
 								}
 								else
 								{
-									if (array[0] == "pos")
+									if (text.StartsWith("exploremap"))
 									{
-										Player localPlayer = Player.m_localPlayer;
-										if (localPlayer)
-										{
-											this.AddString("Player position (X,Y,Z):" + localPlayer.transform.position.ToString("F0"));
-										}
-									}
-									if (text.StartsWith("goto "))
-									{
-										string text5 = text.Substring(5);
-										char[] separator = new char[]
-										{
-											',',
-											' '
-										};
-										string[] array3 = text5.Split(separator);
-										if (array3.Length < 2)
-										{
-											this.AddString("Syntax /goto x,y");
-											return;
-										}
-										try
-										{
-											float x = float.Parse(array3[0]);
-											float z = float.Parse(array3[1]);
-											Player localPlayer2 = Player.m_localPlayer;
-											if (localPlayer2)
-											{
-												Vector3 pos2 = new Vector3(x, localPlayer2.transform.position.y, z);
-												localPlayer2.TeleportTo(pos2, localPlayer2.transform.rotation, true);
-											}
-										}
-										catch (Exception ex)
-										{
-											ZLog.Log("parse error:" + ex.ToString() + "  " + text5);
-										}
-										GoogleAnalyticsV4.instance.LogEvent("Cheat", "Goto", "", 0L);
+										Minimap.instance.ExploreAll();
 										return;
 									}
-									else
+									if (text.StartsWith("resetmap"))
 									{
-										if (text.StartsWith("exploremap"))
+										Minimap.instance.Reset();
+										return;
+									}
+									if (text.StartsWith("puke") && Player.m_localPlayer)
+									{
+										Player.m_localPlayer.ClearFood();
+									}
+									if (text.StartsWith("tame"))
+									{
+										Tameable.TameAllInArea(Player.m_localPlayer.transform.position, 20f);
+									}
+									if (text.StartsWith("killall"))
+									{
+										foreach (Character character in Character.GetAllCharacters())
 										{
-											Minimap.instance.ExploreAll();
-											return;
-										}
-										if (text.StartsWith("resetmap"))
-										{
-											Minimap.instance.Reset();
-											return;
-										}
-										if (text.StartsWith("puke") && Player.m_localPlayer)
-										{
-											Player.m_localPlayer.ClearFood();
-										}
-										if (text.StartsWith("tame"))
-										{
-											Tameable.TameAllInArea(Player.m_localPlayer.transform.position, 20f);
-										}
-										if (text.StartsWith("killall"))
-										{
-											foreach (Character character in Character.GetAllCharacters())
+											if (!character.IsPlayer())
 											{
-												if (!character.IsPlayer())
-												{
-													HitData hitData = new HitData();
-													hitData.m_damage.m_damage = 1E+10f;
-													character.Damage(hitData);
-												}
-											}
-											return;
-										}
-										if (text.StartsWith("heal"))
-										{
-											Player.m_localPlayer.Heal(Player.m_localPlayer.GetMaxHealth(), true);
-											return;
-										}
-										if (text.StartsWith("god"))
-										{
-											Player.m_localPlayer.SetGodMode(!Player.m_localPlayer.InGodMode());
-											this.Print("God mode:" + Player.m_localPlayer.InGodMode().ToString());
-											GoogleAnalyticsV4.instance.LogEvent("Cheat", "God", Player.m_localPlayer.InGodMode().ToString(), 0L);
-										}
-										if (text.StartsWith("ghost"))
-										{
-											Player.m_localPlayer.SetGhostMode(!Player.m_localPlayer.InGhostMode());
-											this.Print("Ghost mode:" + Player.m_localPlayer.InGhostMode().ToString());
-											GoogleAnalyticsV4.instance.LogEvent("Cheat", "Ghost", Player.m_localPlayer.InGhostMode().ToString(), 0L);
-										}
-										if (text.StartsWith("beard"))
-										{
-											string beard = (text.Length >= 6) ? text.Substring(6) : "";
-											if (Player.m_localPlayer)
-											{
-												Player.m_localPlayer.SetBeard(beard);
-											}
-											return;
-										}
-										if (text.StartsWith("hair"))
-										{
-											string hair = (text.Length >= 5) ? text.Substring(5) : "";
-											if (Player.m_localPlayer)
-											{
-												Player.m_localPlayer.SetHair(hair);
-											}
-											return;
-										}
-										if (text.StartsWith("model "))
-										{
-											string s = text.Substring(6);
-											int playerModel;
-											if (Player.m_localPlayer && int.TryParse(s, out playerModel))
-											{
-												Player.m_localPlayer.SetPlayerModel(playerModel);
-											}
-											return;
-										}
-										if (text.StartsWith("tod "))
-										{
-											float num10;
-											if (!float.TryParse(text.Substring(4), NumberStyles.Float, CultureInfo.InvariantCulture, out num10))
-											{
-												return;
-											}
-											this.Print("Setting time of day:" + num10);
-											if (num10 < 0f)
-											{
-												EnvMan.instance.m_debugTimeOfDay = false;
-											}
-											else
-											{
-												EnvMan.instance.m_debugTimeOfDay = true;
-												EnvMan.instance.m_debugTime = Mathf.Clamp01(num10);
+												HitData hitData = new HitData();
+												hitData.m_damage.m_damage = 1E+10f;
+												character.Damage(hitData);
 											}
 										}
-										if (array[0] == "env" && array.Length > 1)
+										return;
+									}
+									if (text.StartsWith("heal"))
+									{
+										Player.m_localPlayer.Heal(Player.m_localPlayer.GetMaxHealth(), true);
+										return;
+									}
+									if (text.StartsWith("god"))
+									{
+										Player.m_localPlayer.SetGodMode(!Player.m_localPlayer.InGodMode());
+										this.Print("God mode:" + Player.m_localPlayer.InGodMode().ToString());
+										Gogan.LogEvent("Cheat", "God", Player.m_localPlayer.InGodMode().ToString(), 0L);
+									}
+									if (text.StartsWith("ghost"))
+									{
+										Player.m_localPlayer.SetGhostMode(!Player.m_localPlayer.InGhostMode());
+										this.Print("Ghost mode:" + Player.m_localPlayer.InGhostMode().ToString());
+										Gogan.LogEvent("Cheat", "Ghost", Player.m_localPlayer.InGhostMode().ToString(), 0L);
+									}
+									if (text.StartsWith("beard"))
+									{
+										string beard = (text.Length >= 6) ? text.Substring(6) : "";
+										if (Player.m_localPlayer)
 										{
-											string text6 = text.Substring(4);
-											this.Print("Setting debug enviornment:" + text6);
-											EnvMan.instance.m_debugEnv = text6;
+											Player.m_localPlayer.SetBeard(beard);
+										}
+										return;
+									}
+									if (text.StartsWith("hair"))
+									{
+										string hair = (text.Length >= 5) ? text.Substring(5) : "";
+										if (Player.m_localPlayer)
+										{
+											Player.m_localPlayer.SetHair(hair);
+										}
+										return;
+									}
+									if (text.StartsWith("model "))
+									{
+										string s = text.Substring(6);
+										int playerModel;
+										if (Player.m_localPlayer && int.TryParse(s, out playerModel))
+										{
+											Player.m_localPlayer.SetPlayerModel(playerModel);
+										}
+										return;
+									}
+									if (text.StartsWith("tod "))
+									{
+										float num10;
+										if (!float.TryParse(text.Substring(4), NumberStyles.Float, CultureInfo.InvariantCulture, out num10))
+										{
 											return;
 										}
-										if (text.StartsWith("resetenv"))
+										this.Print("Setting time of day:" + num10);
+										if (num10 < 0f)
 										{
-											this.Print("Reseting debug enviornment");
-											EnvMan.instance.m_debugEnv = "";
-											return;
+											EnvMan.instance.m_debugTimeOfDay = false;
 										}
-										if (array[0] == "wind" && array.Length == 3)
+										else
 										{
-											float angle = float.Parse(array[1]);
-											float intensity = float.Parse(array[2]);
-											EnvMan.instance.SetDebugWind(angle, intensity);
+											EnvMan.instance.m_debugTimeOfDay = true;
+											EnvMan.instance.m_debugTime = Mathf.Clamp01(num10);
 										}
-										if (array[0] == "resetwind")
-										{
-											EnvMan.instance.ResetDebugWind();
-										}
+									}
+									if (array[0] == "env" && array.Length > 1)
+									{
+										string text6 = text.Substring(4);
+										this.Print("Setting debug enviornment:" + text6);
+										EnvMan.instance.m_debugEnv = text6;
+										return;
+									}
+									if (text.StartsWith("resetenv"))
+									{
+										this.Print("Reseting debug enviornment");
+										EnvMan.instance.m_debugEnv = "";
+										return;
+									}
+									if (array[0] == "wind" && array.Length == 3)
+									{
+										float angle = float.Parse(array[1]);
+										float intensity = float.Parse(array[2]);
+										EnvMan.instance.SetDebugWind(angle, intensity);
+									}
+									if (array[0] == "resetwind")
+									{
+										EnvMan.instance.ResetDebugWind();
 									}
 								}
 							}

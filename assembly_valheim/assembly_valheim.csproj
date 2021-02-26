@@ -159,6 +159,7 @@
     <Compile Include="GameCamera.cs" />
     <Compile Include="Gibber.cs" />
     <Compile Include="GlobalWind.cs" />
+    <Compile Include="Gogan.cs" />
     <Compile Include="Growup.cs" />
     <Compile Include="GuidePoint.cs" />
     <Compile Include="Heightmap.cs" />

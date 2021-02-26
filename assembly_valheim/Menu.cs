@@ -54,7 +54,7 @@ public class Menu : MonoBehaviour
 			bool flag = !InventoryGui.IsVisible() && !Minimap.IsOpen() && !global::Console.IsVisible() && !TextInput.IsVisible() && !ZNet.instance.InPasswordDialog() && !StoreGui.IsVisible() && !Hud.IsPieceSelectionVisible();
 			if ((Input.GetKeyDown(KeyCode.Escape) || ZInput.GetButtonDown("JoyMenu")) && flag)
 			{
-				GoogleAnalyticsV4.instance.LogEvent("Screen", "Enter", "Menu", 0L);
+				Gogan.LogEvent("Screen", "Enter", "Menu", 0L);
 				this.m_root.gameObject.SetActive(true);
 				this.m_menuDialog.gameObject.SetActive(true);
 				this.m_logoutDialog.gameObject.SetActive(false);
@@ -65,7 +65,7 @@ public class Menu : MonoBehaviour
 
 	public void OnSettings()
 	{
-		GoogleAnalyticsV4.instance.LogEvent("Screen", "Enter", "Settings", 0L);
+		Gogan.LogEvent("Screen", "Enter", "Settings", 0L);
 		this.m_settingsInstance = UnityEngine.Object.Instantiate<GameObject>(this.m_settingsPrefab, base.transform);
 	}
 
@@ -77,7 +77,7 @@ public class Menu : MonoBehaviour
 
 	public void OnQuitYes()
 	{
-		GoogleAnalyticsV4.instance.LogEvent("Game", "Quit", "", 0L);
+		Gogan.LogEvent("Game", "Quit", "", 0L);
 		Application.Quit();
 	}
 
@@ -95,7 +95,7 @@ public class Menu : MonoBehaviour
 
 	public void OnLogoutYes()
 	{
-		GoogleAnalyticsV4.instance.LogEvent("Game", "LogOut", "", 0L);
+		Gogan.LogEvent("Game", "LogOut", "", 0L);
 		Game.instance.Logout();
 	}
 
@@ -107,7 +107,7 @@ public class Menu : MonoBehaviour
 
 	public void OnClose()
 	{
-		GoogleAnalyticsV4.instance.LogEvent("Screen", "Exit", "Menu", 0L);
+		Gogan.LogEvent("Screen", "Exit", "Menu", 0L);
 		this.m_root.gameObject.SetActive(false);
 	}
 

@@ -105,38 +105,43 @@ public class ZSteamMatchmaking
 
 	public void QueueServerJoin(string addr)
 	{
-		string[] array = addr.Split(new char[]
+		try
 		{
-			':'
-		});
-		if (array.Length < 2)
-		{
-			return;
+			string[] array = addr.Split(new char[]
+			{
+				':'
+			});
+			if (array.Length >= 2)
+			{
+				if (array[0].Split(new char[]
+				{
+					'.'
+				}).Length == 4)
+				{
+					int num = BitConverter.ToInt32(IPAddress.Parse(array[0]).GetAddressBytes(), 0);
+					uint num2 = (uint)IPAddress.HostToNetworkOrder(num);
+					int num3 = int.Parse(array[1]) + 1;
+					ZLog.Log(string.Concat(new object[]
+					{
+						"request ",
+						array[0],
+						" ",
+						array[1],
+						"  ip:",
+						num,
+						"  nboip:",
+						num2,
+						"   port:",
+						num3
+					}));
+					this.m_joinQuery = SteamMatchmakingServers.PingServer(num2, (ushort)num3, this.m_joinServerCallbackHandler);
+				}
+			}
 		}
-		if (array[0].Split(new char[]
+		catch (Exception arg)
 		{
-			'.'
-		}).Length != 4)
-		{
-			return;
+			ZLog.Log("Server join exception:" + arg);
 		}
-		int num = BitConverter.ToInt32(IPAddress.Parse(array[0]).GetAddressBytes(), 0);
-		uint num2 = (uint)IPAddress.HostToNetworkOrder(num);
-		int num3 = int.Parse(array[1]) + 1;
-		ZLog.Log(string.Concat(new object[]
-		{
-			"request ",
-			array[0],
-			" ",
-			array[1],
-			"  ip:",
-			num,
-			"  nboip:",
-			num2,
-			"   port:",
-			num3
-		}));
-		this.m_joinQuery = SteamMatchmakingServers.PingServer(num2, (ushort)num3, this.m_joinServerCallbackHandler);
 	}
 
 	private void OnJoinServerRespond(gameserveritem_t serverData)

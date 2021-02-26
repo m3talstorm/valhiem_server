@@ -16,6 +16,7 @@ public class TombStone : MonoBehaviour, Hoverable, Interactable
 		if (this.m_nview.IsOwner() && this.m_nview.GetZDO().GetLong("timeOfDeath", 0L) == 0L)
 		{
 			this.m_nview.GetZDO().Set("timeOfDeath", ZNet.instance.GetTime().Ticks);
+			this.m_nview.GetZDO().Set("SpawnPoint", base.transform.position);
 		}
 		base.InvokeRepeating("UpdateDespawn", TombStone.m_updateDt, TombStone.m_updateDt);
 	}
@@ -125,7 +126,7 @@ public class TombStone : MonoBehaviour, Hoverable, Interactable
 		}
 		if (this.m_nview.IsOwner())
 		{
-			this.UnderWorldCheck();
+			this.PositionCheck();
 			if (!this.m_container.IsInUse() && this.m_container.GetInventory().NrOfItems() <= 0)
 			{
 				this.GiveBoost();
@@ -158,8 +159,16 @@ public class TombStone : MonoBehaviour, Hoverable, Interactable
 		return Player.GetPlayer(owner);
 	}
 
-	private void UnderWorldCheck()
+	private void PositionCheck()
 	{
+		Vector3 vec = this.m_nview.GetZDO().GetVec3("SpawnPoint", base.transform.position);
+		if (Utils.DistanceXZ(vec, base.transform.position) > 4f)
+		{
+			ZLog.Log("Tombstone moved too far from spawn position, reseting position");
+			base.transform.position = vec;
+			this.m_body.position = vec;
+			this.m_body.velocity = Vector3.zero;
+		}
 		float groundHeight = ZoneSystem.instance.GetGroundHeight(base.transform.position);
 		if (base.transform.position.y < groundHeight - 1f)
 		{

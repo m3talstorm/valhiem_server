@@ -27,12 +27,10 @@ public class Pathfinding : MonoBehaviour
 		{
 			list.Add(NavMesh.GetSettingsByIndex(i));
 		}
-		ZLog.Log("Build settings:" + list.Count);
 		foreach (NavMeshBuildSettings navMeshBuildSettings in list)
 		{
 			if (navMeshBuildSettings.agentTypeID != 0)
 			{
-				ZLog.Log("Removing " + navMeshBuildSettings.agentTypeID);
 				NavMesh.RemoveSettings(navMeshBuildSettings.agentTypeID);
 			}
 		}
@@ -169,7 +167,7 @@ public class Pathfinding : MonoBehaviour
 	{
 		if (this.m_linkRemoveQueue.Count > 0)
 		{
-			int num = Mathf.Min(this.m_linkRemoveQueue.Count, 25);
+			int num = Mathf.Min(this.m_linkRemoveQueue.Count, Mathf.Max(25, this.m_linkRemoveQueue.Count / 40));
 			for (int i = 0; i < num; i++)
 			{
 				NavMesh.RemoveLink(this.m_linkRemoveQueue.Dequeue());

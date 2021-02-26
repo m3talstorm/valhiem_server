@@ -571,7 +571,7 @@ public class Ship : MonoBehaviour
 	{
 		if (this.m_nview.IsValid() && this.m_nview.IsOwner())
 		{
-			GoogleAnalyticsV4.instance.LogEvent("Game", "ShipDestroyed", base.gameObject.name, 0L);
+			Gogan.LogEvent("Game", "ShipDestroyed", base.gameObject.name, 0L);
 		}
 		Ship.m_currentShips.Remove(this);
 	}

@@ -20,7 +20,7 @@ public class Vegvisir : MonoBehaviour, Hoverable, Interactable
 			return false;
 		}
 		Game.instance.DiscoverClosestLocation(this.m_locationName, base.transform.position, this.m_pinName, (int)this.m_pinType);
-		GoogleAnalyticsV4.instance.LogEvent("Game", "Vegvisir", this.m_locationName, 0L);
+		Gogan.LogEvent("Game", "Vegvisir", this.m_locationName, 0L);
 		return true;
 	}
 

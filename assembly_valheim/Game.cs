@@ -28,8 +28,8 @@ public class Game : MonoBehaviour
 		this.m_playerProfile = new PlayerProfile(null);
 		base.InvokeRepeating("ServerLog", 600f, 600f);
 		base.InvokeRepeating("CollectResources", 600f, 600f);
-		GoogleAnalyticsV4.instance.LogEvent("Screen", "Enter", "InGame", 0L);
-		GoogleAnalyticsV4.instance.LogEvent("Game", "InputMode", ZInput.IsGamepadActive() ? "Gamepad" : "MK", 0L);
+		Gogan.LogEvent("Screen", "Enter", "InGame", 0L);
+		Gogan.LogEvent("Game", "InputMode", ZInput.IsGamepadActive() ? "Gamepad" : "MK", 0L);
 	}
 
 	private void OnDestroy()
@@ -39,7 +39,7 @@ public class Game : MonoBehaviour
 
 	private void Start()
 	{
-		Application.targetFrameRate = -1;
+		Application.targetFrameRate = 30;
 		ZRoutedRpc.instance.Register("SleepStart", new Action<long>(this.SleepStart));
 		ZRoutedRpc.instance.Register("SleepStop", new Action<long>(this.SleepStop));
 		ZRoutedRpc.instance.Register<float>("Ping", new Action<long, float>(this.RPC_Ping));
@@ -97,6 +97,7 @@ public class Game : MonoBehaviour
 	{
 		ZLog.Log("Game - OnApplicationQuit");
 		this.Shutdown();
+		Thread.Sleep(2000);
 	}
 
 	private void Shutdown()
@@ -243,7 +244,6 @@ public class Game : MonoBehaviour
 
 	private void Update()
 	{
-		Thread.Sleep(1);
 		ZInput.Update(Time.deltaTime);
 		this.UpdateSaving(Time.deltaTime);
 	}
@@ -256,13 +256,13 @@ public class Game : MonoBehaviour
 	private void UpdateSaving(float dt)
 	{
 		this.m_saveTimer += dt;
-		if (this.m_saveTimer > 1800f)
+		if (this.m_saveTimer > 1200f)
 		{
 			this.m_saveTimer = 0f;
 			this.SavePlayerProfile(false);
 			if (ZNet.instance)
 			{
-				ZNet.instance.Save();
+				ZNet.instance.Save(false);
 			}
 		}
 	}
@@ -593,7 +593,7 @@ public class Game : MonoBehaviour
 
 	private float m_saveTimer;
 
-	private const float m_saveInterval = 1800f;
+	private const float m_saveInterval = 1200f;
 
 	private const float m_difficultyScaleRange = 200f;
 

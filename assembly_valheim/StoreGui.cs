@@ -111,7 +111,7 @@ public class StoreGui : MonoBehaviour
 			this.m_buyEffects.Create(base.transform.position, Quaternion.identity, null, 1f);
 			Player.m_localPlayer.ShowPickupMessage(this.m_selectedItem.m_prefab.m_itemData, this.m_selectedItem.m_prefab.m_itemData.m_stack);
 			this.FillList();
-			GoogleAnalyticsV4.instance.LogEvent("Game", "BoughtItem", this.m_selectedItem.m_prefab.name, 0L);
+			Gogan.LogEvent("Game", "BoughtItem", this.m_selectedItem.m_prefab.name, 0L);
 		}
 	}
 
@@ -147,7 +147,7 @@ public class StoreGui : MonoBehaviour
 		}), 0, sellableItem.m_shared.m_icons[0]);
 		this.m_trader.OnSold();
 		this.FillList();
-		GoogleAnalyticsV4.instance.LogEvent("Game", "SoldItem", text, 0L);
+		Gogan.LogEvent("Game", "SoldItem", text, 0L);
 	}
 
 	private int GetPlayerCoins()

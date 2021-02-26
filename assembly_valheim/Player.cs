@@ -1610,7 +1610,7 @@ public class Player : Humanoid
 			base.AddNoise(50f);
 			Game.instance.GetPlayerProfile().m_playerStats.m_builds++;
 			ZLog.Log("Placed " + gameObject.name);
-			GoogleAnalyticsV4.instance.LogEvent("Game", "PlacedPiece", gameObject.name, 0L);
+			Gogan.LogEvent("Game", "PlacedPiece", gameObject.name, 0L);
 			return true;
 		}
 		}
@@ -1743,7 +1743,7 @@ public class Player : Humanoid
 		this.Message(MessageHud.MessageType.Center, "$msg_youdied", 0, null);
 		this.ShowTutorial("death", false);
 		string eventLabel = "biome:" + this.GetCurrentBiome().ToString();
-		GoogleAnalyticsV4.instance.LogEvent("Game", "Death", eventLabel, 0L);
+		Gogan.LogEvent("Game", "Death", eventLabel, 0L);
 	}
 
 	public void OnRespawn()
@@ -2054,7 +2054,7 @@ public class Player : Humanoid
 			{
 				this.m_placementStatus = Player.PlacementStatus.NeedCultivated;
 			}
-			if (component.m_notOnWood && piece && wearNTear && wearNTear.m_materialType == WearNTear.MaterialType.Wood)
+			if (component.m_notOnWood && piece && wearNTear && (wearNTear.m_materialType == WearNTear.MaterialType.Wood || wearNTear.m_materialType == WearNTear.MaterialType.HardWood))
 			{
 				this.m_placementStatus = Player.PlacementStatus.Invalid;
 			}
@@ -2860,7 +2860,7 @@ public class Player : Humanoid
 			{
 				this.ShowTutorial("blackforest", false);
 			}
-			GoogleAnalyticsV4.instance.LogEvent("Game", "BiomeFound", biome.ToString(), 0L);
+			Gogan.LogEvent("Game", "BiomeFound", biome.ToString(), 0L);
 		}
 	}
 
@@ -2875,7 +2875,7 @@ public class Player : Humanoid
 		{
 			this.m_knownRecipes.Add(recipe.m_item.m_itemData.m_shared.m_name);
 			MessageHud.instance.QueueUnlockMsg(recipe.m_item.m_itemData.GetIcon(), "$msg_newrecipe", recipe.m_item.m_itemData.m_shared.m_name);
-			GoogleAnalyticsV4.instance.LogEvent("Game", "RecipeFound", recipe.m_item.m_itemData.m_shared.m_name, 0L);
+			Gogan.LogEvent("Game", "RecipeFound", recipe.m_item.m_itemData.m_shared.m_name, 0L);
 		}
 	}
 
@@ -2885,7 +2885,7 @@ public class Player : Humanoid
 		{
 			this.m_knownRecipes.Add(piece.m_name);
 			MessageHud.instance.QueueUnlockMsg(piece.m_icon, "$msg_newpiece", piece.m_name);
-			GoogleAnalyticsV4.instance.LogEvent("Game", "PieceFound", piece.m_name, 0L);
+			Gogan.LogEvent("Game", "PieceFound", piece.m_name, 0L);
 		}
 	}
 
@@ -2905,7 +2905,7 @@ public class Player : Humanoid
 		}
 		this.m_knownStations.Add(station.m_name, level);
 		MessageHud.instance.QueueUnlockMsg(station.m_icon, "$msg_newstation", station.m_name);
-		GoogleAnalyticsV4.instance.LogEvent("Game", "StationFound", station.m_name, 0L);
+		Gogan.LogEvent("Game", "StationFound", station.m_name, 0L);
 		this.UpdateKnownRecipesList();
 	}
 
@@ -2958,7 +2958,7 @@ public class Player : Humanoid
 			{
 				MessageHud.instance.QueueUnlockMsg(item.GetIcon(), "$msg_newitem", item.m_shared.m_name);
 			}
-			GoogleAnalyticsV4.instance.LogEvent("Game", "ItemFound", item.m_shared.m_name, 0L);
+			Gogan.LogEvent("Game", "ItemFound", item.m_shared.m_name, 0L);
 			this.UpdateKnownRecipesList();
 		}
 	}

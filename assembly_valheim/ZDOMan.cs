@@ -90,67 +90,54 @@ public class ZDOMan
 
 	public void Load(BinaryReader reader, int version)
 	{
-		try
+		reader.ReadInt64();
+		uint num = reader.ReadUInt32();
+		int num2 = reader.ReadInt32();
+		ZDOPool.Release(this.m_objectsByID);
+		this.m_objectsByID.Clear();
+		this.ResetSectorArray();
+		ZLog.Log(string.Concat(new object[]
 		{
-			reader.ReadInt64();
-			uint num = reader.ReadUInt32();
-			int num2 = reader.ReadInt32();
-			ZDOPool.Release(this.m_objectsByID);
-			this.m_objectsByID.Clear();
-			this.ResetSectorArray();
-			ZLog.Log(string.Concat(new object[]
-			{
-				"Loading ",
-				num2,
-				" zdos , my id ",
-				this.m_myid,
-				" data version:",
-				version
-			}));
-			ZPackage zpackage = new ZPackage();
-			for (int i = 0; i < num2; i++)
-			{
-				ZDO zdo = ZDOPool.Create(this);
-				zdo.m_uid = new ZDOID(reader);
-				int count = reader.ReadInt32();
-				byte[] data = reader.ReadBytes(count);
-				zpackage.Load(data);
-				zdo.Load(zpackage, version);
-				zdo.SetOwner(0L);
-				this.m_objectsByID.Add(zdo.m_uid, zdo);
-				this.AddToSector(zdo, zdo.GetSector());
-				if (zdo.m_uid.userID == this.m_myid && zdo.m_uid.id >= num)
-				{
-					num = zdo.m_uid.id + 1U;
-				}
-			}
-			this.m_deadZDOs.Clear();
-			int num3 = reader.ReadInt32();
-			for (int j = 0; j < num3; j++)
-			{
-				ZDOID key = new ZDOID(reader.ReadInt64(), reader.ReadUInt32());
-				long value = reader.ReadInt64();
-				this.m_deadZDOs.Add(key, value);
-				if (key.userID == this.m_myid && key.id >= num)
-				{
-					num = key.id + 1U;
-				}
-			}
-			this.CapDeadZDOList();
-			ZLog.Log("Loaded " + this.m_deadZDOs.Count + " dead zdos");
-			this.RemoveOldGeneratedZDOS();
-			this.m_nextUid = num;
-		}
-		catch (Exception ex)
+			"Loading ",
+			num2,
+			" zdos , my id ",
+			this.m_myid,
+			" data version:",
+			version
+		}));
+		ZPackage zpackage = new ZPackage();
+		for (int i = 0; i < num2; i++)
 		{
-			ZLog.LogError("Exception while loading ZDO data:" + ex.ToString());
-			ZDOPool.Release(this.m_objectsByID);
-			this.m_objectsByID.Clear();
-			this.ResetSectorArray();
-			this.m_deadZDOs.Clear();
-			this.m_myid = Utils.GenerateUID();
-			this.m_nextUid = 1U;
+			ZDO zdo = ZDOPool.Create(this);
+			zdo.m_uid = new ZDOID(reader);
+			int count = reader.ReadInt32();
+			byte[] data = reader.ReadBytes(count);
+			zpackage.Load(data);
+			zdo.Load(zpackage, version);
+			zdo.SetOwner(0L);
+			this.m_objectsByID.Add(zdo.m_uid, zdo);
+			this.AddToSector(zdo, zdo.GetSector());
+			if (zdo.m_uid.userID == this.m_myid && zdo.m_uid.id >= num)
+			{
+				num = zdo.m_uid.id + 1U;
+			}
 		}
+		this.m_deadZDOs.Clear();
+		int num3 = reader.ReadInt32();
+		for (int j = 0; j < num3; j++)
+		{
+			ZDOID key = new ZDOID(reader.ReadInt64(), reader.ReadUInt32());
+			long value = reader.ReadInt64();
+			this.m_deadZDOs.Add(key, value);
+			if (key.userID == this.m_myid && key.id >= num)
+			{
+				num = key.id + 1U;
+			}
+		}
+		this.CapDeadZDOList();
+		ZLog.Log("Loaded " + this.m_deadZDOs.Count + " dead zdos");
+		this.RemoveOldGeneratedZDOS();
+		this.m_nextUid = num;
 	}
 
 	private void RemoveOldGeneratedZDOS()

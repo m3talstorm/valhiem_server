@@ -142,7 +142,7 @@ public class Skills : MonoBehaviour
 				": ",
 				(int)skill.m_level
 			}), 0, skill.m_info.m_icon);
-			GoogleAnalyticsV4.instance.LogEvent("Game", "Levelup", skillType.ToString(), (long)((int)skill.m_level));
+			Gogan.LogEvent("Game", "Levelup", skillType.ToString(), (long)((int)skill.m_level));
 		}
 	}
 

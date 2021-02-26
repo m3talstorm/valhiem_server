@@ -175,7 +175,8 @@ public class ZSteamSocket : IDisposable, ISocket
 		while (this.m_sendQueue.Count > 0)
 		{
 			byte[] array = this.m_sendQueue.Peek();
-			if (!SteamGameServerNetworking.SendP2PPacket(this.m_peerID, array, (uint)array.Length, EP2PSend.k_EP2PSendReliable, 0))
+			EP2PSend eP2PSendType = EP2PSend.k_EP2PSendReliable;
+			if (!SteamGameServerNetworking.SendP2PPacket(this.m_peerID, array, (uint)array.Length, eP2PSendType, 0))
 			{
 				break;
 			}

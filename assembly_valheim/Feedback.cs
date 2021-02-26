@@ -48,7 +48,7 @@ public class Feedback : MonoBehaviour
 			return;
 		}
 		string category = this.GetCategory();
-		GoogleAnalyticsV4.instance.LogEvent("Feedback_" + category, this.m_subject.text, this.m_text.text, 0L);
+		Gogan.LogEvent("Feedback_" + category, this.m_subject.text, this.m_text.text, 0L);
 		UnityEngine.Object.Destroy(base.gameObject);
 	}
 

@@ -12,6 +12,7 @@ public class Pickable : MonoBehaviour, Hoverable, Interactable
 			return;
 		}
 		this.m_nview.Register<bool>("SetPicked", new Action<long, bool>(this.RPC_SetPicked));
+		this.m_nview.Register("Pick", new Action<long>(this.RPC_Pick));
 		this.m_picked = zdo.GetBool("picked", false);
 		this.SetPicked(this.m_picked);
 		if (this.m_respawnTimeMinutes > 0)
@@ -59,6 +60,46 @@ public class Pickable : MonoBehaviour, Hoverable, Interactable
 		}
 	}
 
+	public bool Interact(Humanoid character, bool repeat)
+	{
+		if (!this.m_nview.IsValid())
+		{
+			return false;
+		}
+		this.m_nview.InvokeRPC("Pick", Array.Empty<object>());
+		return this.m_useInteractAnimation;
+	}
+
+	private void RPC_Pick(long sender)
+	{
+		if (!this.m_nview.IsOwner())
+		{
+			return;
+		}
+		if (this.m_picked)
+		{
+			return;
+		}
+		Vector3 pos = this.m_pickEffectAtSpawnPoint ? (base.transform.position + Vector3.up * this.m_spawnOffset) : base.transform.position;
+		this.m_pickEffector.Create(pos, Quaternion.identity, null, 1f);
+		int num = 0;
+		for (int i = 0; i < this.m_amount; i++)
+		{
+			this.Drop(this.m_itemPrefab, num++, 1);
+		}
+		if (!this.m_extraDrops.IsEmpty())
+		{
+			foreach (ItemDrop.ItemData itemData in this.m_extraDrops.GetDropListItems())
+			{
+				this.Drop(itemData.m_dropPrefab, num++, itemData.m_stack);
+			}
+		}
+		this.m_nview.InvokeRPC(ZNetView.Everybody, "SetPicked", new object[]
+		{
+			true
+		});
+	}
+
 	private void RPC_SetPicked(long sender, bool picked)
 	{
 		this.SetPicked(picked);
@@ -88,33 +129,6 @@ public class Pickable : MonoBehaviour, Hoverable, Interactable
 				this.m_nview.Destroy();
 			}
 		}
-	}
-
-	public bool Interact(Humanoid character, bool repeat)
-	{
-		if (this.m_picked)
-		{
-			return false;
-		}
-		Vector3 pos = this.m_pickEffectAtSpawnPoint ? (base.transform.position + Vector3.up * this.m_spawnOffset) : base.transform.position;
-		this.m_pickEffector.Create(pos, Quaternion.identity, null, 1f);
-		int num = 0;
-		for (int i = 0; i < this.m_amount; i++)
-		{
-			this.Drop(this.m_itemPrefab, num++, 1);
-		}
-		if (!this.m_extraDrops.IsEmpty())
-		{
-			foreach (ItemDrop.ItemData itemData in this.m_extraDrops.GetDropListItems())
-			{
-				this.Drop(itemData.m_dropPrefab, num++, itemData.m_stack);
-			}
-		}
-		this.m_nview.InvokeRPC(ZNetView.Everybody, "SetPicked", new object[]
-		{
-			true
-		});
-		return this.m_useInteractAnimation;
 	}
 
 	private void Drop(GameObject prefab, int offset, int stack)

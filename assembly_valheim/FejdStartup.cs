@@ -37,10 +37,10 @@ public class FejdStartup : MonoBehaviour
 		this.m_mainCamera.transform.position = this.m_cameraMarkerMain.transform.position;
 		this.m_mainCamera.transform.rotation = this.m_cameraMarkerMain.transform.rotation;
 		ZLog.Log("Render threading mode:" + SystemInfo.renderingThreadingMode);
-		GoogleAnalyticsV4.instance.StartSession();
-		GoogleAnalyticsV4.instance.LogEvent("Game", "Version", global::Version.GetVersionString(), 0L);
-		GoogleAnalyticsV4.instance.LogEvent("Game", "SteamID", SteamManager.APP_ID.ToString(), 0L);
-		GoogleAnalyticsV4.instance.LogEvent("Screen", "Enter", "StartMenu", 0L);
+		Gogan.StartSession();
+		Gogan.LogEvent("Game", "Version", global::Version.GetVersionString(), 0L);
+		Gogan.LogEvent("Game", "SteamID", SteamManager.APP_ID.ToString(), 0L);
+		Gogan.LogEvent("Screen", "Enter", "StartMenu", 0L);
 		if (!this.ParseServerArguments())
 		{
 			return;
@@ -92,7 +92,7 @@ public class FejdStartup : MonoBehaviour
 				this.m_mainMenu.SetActive(false);
 			}
 		}
-		this.m_manualIPButton.gameObject.SetActive(false);
+		this.m_manualIPButton.gameObject.SetActive(true);
 		this.m_serverListBaseSize = this.m_serverListRoot.rect.height;
 		this.m_worldListBaseSize = this.m_worldListRoot.rect.height;
 		this.m_versionLabel.text = "version " + global::Version.GetVersionString();
@@ -275,7 +275,7 @@ public class FejdStartup : MonoBehaviour
 
 	public void OnStartGame()
 	{
-		GoogleAnalyticsV4.instance.LogEvent("Screen", "Enter", "StartGame", 0L);
+		Gogan.LogEvent("Screen", "Enter", "StartGame", 0L);
 		this.m_mainMenu.SetActive(false);
 		this.ShowCharacterSelection();
 	}
@@ -448,7 +448,7 @@ public class FejdStartup : MonoBehaviour
 		this.m_world.SaveWorldMetaData();
 		this.UpdateWorldList(true);
 		this.ShowStartGame();
-		GoogleAnalyticsV4.instance.LogEvent("Menu", "NewWorld", text, 0L);
+		Gogan.LogEvent("Menu", "NewWorld", text, 0L);
 	}
 
 	public void OnNewWorldBack()
@@ -469,24 +469,17 @@ public class FejdStartup : MonoBehaviour
 		ZNet.SetServer(true, isOn2, isOn, this.m_world.m_name, text, this.m_world);
 		ZNet.SetServerHost("", 0);
 		string eventLabel = "open:" + isOn2.ToString() + ",public:" + isOn.ToString();
-		GoogleAnalyticsV4.instance.LogEvent("Menu", "WorldStart", eventLabel, 0L);
+		Gogan.LogEvent("Menu", "WorldStart", eventLabel, 0L);
 		this.TransitionToMainScene();
 	}
 
 	private void ShowCharacterSelection()
 	{
-		GoogleAnalyticsV4.instance.LogEvent("Screen", "Enter", "CharacterSelection", 0L);
+		Gogan.LogEvent("Screen", "Enter", "CharacterSelection", 0L);
 		ZLog.Log("show character selection");
 		this.m_characterSelectScreen.SetActive(true);
 		this.m_selectCharacterPanel.SetActive(true);
 		this.m_newCharacterPanel.SetActive(false);
-	}
-
-	public void OnJoinGame()
-	{
-		GoogleAnalyticsV4.instance.LogEvent("Screen", "Enter", "JoinGame", 0L);
-		this.HideAll();
-		this.ShowCharacterSelection();
 	}
 
 	public void OnServerFilterChanged()
@@ -638,13 +631,14 @@ public class FejdStartup : MonoBehaviour
 	{
 		ZNet.SetServer(false, false, false, "", "", null);
 		ZNet.SetServerHost(this.m_joinServer.m_steamHostID);
-		GoogleAnalyticsV4.instance.LogEvent("Menu", "JoinServer", "", 0L);
+		Gogan.LogEvent("Menu", "JoinServer", "", 0L);
 		this.TransitionToMainScene();
 	}
 
 	public void OnJoinIPOpen()
 	{
 		this.m_joinIPPanel.SetActive(true);
+		this.m_joinIPAddress.ActivateInputField();
 	}
 
 	public void OnJoinIPConnect()
@@ -659,20 +653,17 @@ public class FejdStartup : MonoBehaviour
 			return;
 		}
 		string text = array[0];
-		int port = this.m_joinHostPort;
-		int num;
-		if (array.Length > 1 && int.TryParse(array[1], out num))
+		int num = this.m_joinHostPort;
+		int num2;
+		if (array.Length > 1 && int.TryParse(array[1], out num2))
 		{
-			port = num;
+			num = num2;
 		}
 		if (text.Length == 0)
 		{
 			return;
 		}
-		this.m_joinServer = new MasterClient.ServerData();
-		this.m_joinServer.m_host = text;
-		this.m_joinServer.m_port = port;
-		this.JoinServer();
+		ZSteamMatchmaking.instance.QueueServerJoin(text + ":" + num);
 	}
 
 	public void OnJoinIPBack()
@@ -705,14 +696,14 @@ public class FejdStartup : MonoBehaviour
 	{
 		this.m_creditsPanel.SetActive(true);
 		this.m_mainMenu.SetActive(false);
-		GoogleAnalyticsV4.instance.LogEvent("Screen", "Enter", "Credits", 0L);
+		Gogan.LogEvent("Screen", "Enter", "Credits", 0L);
 	}
 
 	public void OnCreditsBack()
 	{
 		this.m_mainMenu.SetActive(true);
 		this.m_creditsPanel.SetActive(false);
-		GoogleAnalyticsV4.instance.LogEvent("Screen", "Enter", "StartMenu", 0L);
+		Gogan.LogEvent("Screen", "Enter", "StartMenu", 0L);
 	}
 
 	public void OnSelelectCharacterBack()
@@ -720,7 +711,7 @@ public class FejdStartup : MonoBehaviour
 		this.m_characterSelectScreen.SetActive(false);
 		this.m_mainMenu.SetActive(true);
 		this.m_queuedJoinServer = null;
-		GoogleAnalyticsV4.instance.LogEvent("Screen", "Enter", "StartMenu", 0L);
+		Gogan.LogEvent("Screen", "Enter", "StartMenu", 0L);
 	}
 
 	public void OnAbort()
@@ -842,7 +833,15 @@ public class FejdStartup : MonoBehaviour
 			{
 				this.m_queuedJoinServer = new MasterClient.ServerData();
 				this.m_queuedJoinServer.m_steamHostID = (ulong)joinUserID;
-				this.OnJoinGame();
+				if (this.m_serverListPanel.activeInHierarchy)
+				{
+					this.m_joinServer = this.m_queuedJoinServer;
+					this.m_queuedJoinServer = null;
+					this.JoinServer();
+					return;
+				}
+				this.HideAll();
+				this.ShowCharacterSelection();
 			}
 		}
 	}
@@ -988,7 +987,7 @@ public class FejdStartup : MonoBehaviour
 		this.m_newCharacterPanel.SetActive(false);
 		this.m_profiles = null;
 		this.SetSelectedProfile(text2);
-		GoogleAnalyticsV4.instance.LogEvent("Menu", "NewCharacter", text, 0L);
+		Gogan.LogEvent("Menu", "NewCharacter", text, 0L);
 	}
 
 	public void OnNewCharacterCancel()
@@ -1005,7 +1004,7 @@ public class FejdStartup : MonoBehaviour
 		this.m_csNewCharacterName.text = "";
 		this.m_newCharacterError.SetActive(false);
 		this.SetupCharacterPreview(null);
-		GoogleAnalyticsV4.instance.LogEvent("Screen", "Enter", "CreateCharacter", 0L);
+		Gogan.LogEvent("Screen", "Enter", "CreateCharacter", 0L);
 	}
 
 	public void OnCharacterRemove()

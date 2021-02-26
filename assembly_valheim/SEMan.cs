@@ -126,7 +126,7 @@ public class SEMan
 		statusEffect3.Setup(this.m_character);
 		if (this.m_character.IsPlayer())
 		{
-			GoogleAnalyticsV4.instance.LogEvent("Game", "StatusEffect", statusEffect.name, 0L);
+			Gogan.LogEvent("Game", "StatusEffect", statusEffect.name, 0L);
 		}
 		return statusEffect3;
 	}

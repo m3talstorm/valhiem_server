@@ -1406,7 +1406,7 @@ public class Character : MonoBehaviour, IDestructible, Hoverable, IWaterInteract
 			ZoneSystem.instance.SetGlobalKey(this.m_defeatSetGlobalKey);
 		}
 		ZNetScene.instance.Destroy(base.gameObject);
-		GoogleAnalyticsV4.instance.LogEvent("Game", "Killed", this.m_name, 0L);
+		Gogan.LogEvent("Game", "Killed", this.m_name, 0L);
 	}
 
 	public float GetHealth()
