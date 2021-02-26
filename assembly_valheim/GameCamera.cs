@@ -63,12 +63,12 @@ public class GameCamera : MonoBehaviour
 	public static void ScreenShot()
 	{
 		DateTime now = DateTime.Now;
-		Directory.CreateDirectory(Application.persistentDataPath + "/screenshots");
+		Directory.CreateDirectory(Utils.GetSaveDataPath() + "/screenshots");
 		string text = now.Hour.ToString("00") + now.Minute.ToString("00") + now.Second.ToString("00");
 		string text2 = now.ToString("yyyy-MM-dd");
 		string text3 = string.Concat(new string[]
 		{
-			Application.persistentDataPath,
+			Utils.GetSaveDataPath(),
 			"/screenshots/screenshot_",
 			text2,
 			"_",

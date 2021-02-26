@@ -150,7 +150,7 @@ public class Vagon : MonoBehaviour, Hoverable, Interactable
 			return false;
 		}
 		Humanoid component = go.GetComponent<Humanoid>();
-		return (!component || !component.InDodge()) && Vector3.Distance(go.transform.position + this.m_attachOffset, this.m_attachPoint.position) < this.m_detachDistance;
+		return (!component || (!component.InDodge() && !component.IsTeleporting())) && Vector3.Distance(go.transform.position + this.m_attachOffset, this.m_attachPoint.position) < this.m_detachDistance;
 	}
 
 	private void AttachTo(GameObject go)

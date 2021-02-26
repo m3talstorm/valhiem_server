@@ -14,6 +14,8 @@ public class WearNTear : MonoBehaviour, IDestructible
 			return;
 		}
 		this.m_nview.Register<HitData>("WNTDamage", new Action<long, HitData>(this.RPC_Damage));
+		this.m_nview.Register("WNTRemove", new Action<long>(this.RPC_Remove));
+		this.m_nview.Register("WNTRepair", new Action<long>(this.RPC_Repair));
 		this.m_nview.Register<float>("WNTHealthChanged", new Action<long, float>(this.RPC_HealthChanged));
 		if (this.m_autoCreateFragments)
 		{
@@ -54,17 +56,34 @@ public class WearNTear : MonoBehaviour, IDestructible
 
 	public bool Repair()
 	{
+		if (!this.m_nview.IsValid())
+		{
+			return false;
+		}
 		if (this.m_nview.GetZDO().GetFloat("health", this.m_health) >= this.m_health)
 		{
 			return false;
 		}
-		this.m_nview.ClaimOwnership();
+		if (Time.time - this.m_lastRepair < 1f)
+		{
+			return false;
+		}
+		this.m_lastRepair = Time.time;
+		this.m_nview.InvokeRPC("WNTRepair", Array.Empty<object>());
+		return true;
+	}
+
+	private void RPC_Repair(long sender)
+	{
+		if (!this.m_nview.IsValid() || !this.m_nview.IsOwner())
+		{
+			return;
+		}
 		this.m_nview.GetZDO().Set("health", this.m_health);
 		this.m_nview.InvokeRPC(ZNetView.Everybody, "WNTHealthChanged", new object[]
 		{
 			this.m_health
 		});
-		return true;
 	}
 
 	private float GetSupport()
@@ -587,7 +606,25 @@ public class WearNTear : MonoBehaviour, IDestructible
 		return true;
 	}
 
-	public void Destroy()
+	public void Remove()
+	{
+		if (!this.m_nview.IsValid())
+		{
+			return;
+		}
+		this.m_nview.InvokeRPC("WNTRemove", Array.Empty<object>());
+	}
+
+	private void RPC_Remove(long sender)
+	{
+		if (!this.m_nview.IsValid() || !this.m_nview.IsOwner())
+		{
+			return;
+		}
+		this.Destroy();
+	}
+
+	private void Destroy()
 	{
 		this.m_nview.GetZDO().Set("health", 0f);
 		if (this.m_piece)
@@ -779,6 +816,8 @@ public class WearNTear : MonoBehaviour, IDestructible
 	private int m_myIndex = -1;
 
 	private float m_rainTimer;
+
+	private float m_lastRepair;
 
 	private Piece m_piece;
 

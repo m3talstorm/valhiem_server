@@ -244,7 +244,6 @@ public class Game : MonoBehaviour
 	private void Update()
 	{
 		Thread.Sleep(1);
-		ServerCtrl.instance.Update(Time.deltaTime);
 		ZInput.Update(Time.deltaTime);
 		this.UpdateSaving(Time.deltaTime);
 	}

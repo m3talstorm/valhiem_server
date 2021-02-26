@@ -130,6 +130,11 @@ public class MonsterAI : BaseAI
 			{
 				this.m_targetCreature.OnTargeted(canSeeTarget | canHearTarget, base.IsAlerted());
 			}
+			base.SetTargetInfo(this.m_targetCreature.GetZDOID());
+		}
+		else
+		{
+			base.SetTargetInfo(ZDOID.None);
 		}
 		this.m_timeSinceSensedTargetCreature += dt;
 		if (base.IsAlerted() || this.m_targetCreature != null)
@@ -295,12 +300,13 @@ public class MonsterAI : BaseAI
 						this.m_beenAtLastPos = false;
 						this.m_lastKnownTargetPos = this.m_targetCreature.transform.position;
 						float num = Vector3.Distance(this.m_lastKnownTargetPos, base.transform.position) - this.m_targetCreature.GetRadius();
-						if ((flag2 && num < this.m_alertRange) || this.HuntPlayer())
+						float num2 = this.m_alertRange * this.m_targetCreature.GetStealthFactor();
+						if ((flag2 && num < num2) || this.HuntPlayer())
 						{
 							this.SetAlerted(true);
 						}
 						bool flag4 = num < itemData.m_shared.m_aiAttackRange;
-						if (!flag4 || !flag2 || itemData.m_shared.m_aiAttackRangeMin < 0f)
+						if (!flag4 || !flag2 || itemData.m_shared.m_aiAttackRangeMin < 0f || !base.IsAlerted())
 						{
 							this.m_aiStatus = "Move closer";
 							Vector3 velocity = this.m_targetCreature.GetVelocity();
@@ -310,13 +316,16 @@ public class MonsterAI : BaseAI
 							{
 								vector3 += velocity * this.m_interceptTime;
 							}
-							base.MoveTo(dt, vector3, 0f, base.IsAlerted());
+							if (base.MoveTo(dt, vector3, 0f, base.IsAlerted()))
+							{
+								flag4 = true;
+							}
 						}
 						else
 						{
 							base.StopMoving();
 						}
-						if (flag4 && flag2)
+						if (flag4 && flag2 && base.IsAlerted())
 						{
 							this.m_aiStatus = "In attack range";
 							base.LookAt(this.m_targetCreature.GetTopPoint());

@@ -89,7 +89,7 @@ public class Pathfinding : MonoBehaviour
 		this.AddAgent(Pathfinding.AgentType.HumanoidAvoidWater, agentSettings).m_avoidWater = true;
 		Pathfinding.AgentSettings agentSettings3 = this.AddAgent(Pathfinding.AgentType.TrollSize, null);
 		agentSettings3.m_build.agentHeight = 7f;
-		agentSettings3.m_build.agentClimb = 0.7f;
+		agentSettings3.m_build.agentClimb = 0.6f;
 		agentSettings3.m_build.agentRadius = 1f;
 		agentSettings3.m_build.agentSlope = 85f;
 		Pathfinding.AgentSettings agentSettings4 = this.AddAgent(Pathfinding.AgentType.GoblinBruteSize, null);
@@ -99,7 +99,7 @@ public class Pathfinding : MonoBehaviour
 		agentSettings4.m_build.agentSlope = 85f;
 		Pathfinding.AgentSettings agentSettings5 = this.AddAgent(Pathfinding.AgentType.HugeSize, null);
 		agentSettings5.m_build.agentHeight = 10f;
-		agentSettings5.m_build.agentClimb = 1.2f;
+		agentSettings5.m_build.agentClimb = 0.6f;
 		agentSettings5.m_build.agentRadius = 2f;
 		agentSettings5.m_build.agentSlope = 85f;
 		Pathfinding.AgentSettings agentSettings6 = this.AddAgent(Pathfinding.AgentType.HorseSize, null);

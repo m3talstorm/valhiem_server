@@ -70,10 +70,8 @@ public class PlayerProfile
 
 	private bool SavePlayerToDisk()
 	{
-		Directory.CreateDirectory(Application.persistentDataPath + "/characters");
-		string text = Application.persistentDataPath + "/characters/" + this.m_filename + ".fch";
-		string text2 = Application.persistentDataPath + "/characters/" + this.m_filename + ".fch.old";
-		string text3 = Application.persistentDataPath + "/characters/" + this.m_filename + ".fch.new";
+		Directory.CreateDirectory(Utils.GetSaveDataPath() + "/characters");
+		string path = Utils.GetSaveDataPath() + "/characters/" + this.m_filename + ".fch";
 		ZPackage zpackage = new ZPackage();
 		zpackage.Write(global::Version.m_playerVersion);
 		zpackage.Write(this.m_playerStats.m_kills);
@@ -110,23 +108,15 @@ public class PlayerProfile
 			zpackage.Write(false);
 		}
 		byte[] array = zpackage.GenerateHash();
-		FileStream fileStream = File.Create(text3);
-		BinaryWriter binaryWriter = new BinaryWriter(fileStream);
 		byte[] array2 = zpackage.GetArray();
+		FileStream fileStream = File.Create(path);
+		BinaryWriter binaryWriter = new BinaryWriter(fileStream);
 		binaryWriter.Write(array2.Length);
 		binaryWriter.Write(array2);
 		binaryWriter.Write(array.Length);
 		binaryWriter.Write(array);
+		binaryWriter.Close();
 		fileStream.Dispose();
-		if (File.Exists(text))
-		{
-			if (File.Exists(text2))
-			{
-				File.Delete(text2);
-			}
-			File.Move(text, text2);
-		}
-		File.Move(text3, text);
 		return true;
 	}
 
@@ -196,7 +186,7 @@ public class PlayerProfile
 
 	private ZPackage LoadPlayerDataFromDisk()
 	{
-		string text = Application.persistentDataPath + "/characters/" + this.m_filename + ".fch";
+		string text = Utils.GetSaveDataPath() + "/characters/" + this.m_filename + ".fch";
 		FileStream fileStream;
 		try
 		{
@@ -335,7 +325,7 @@ public class PlayerProfile
 		string[] array;
 		try
 		{
-			array = Directory.GetFiles(Application.persistentDataPath + "/characters", "*.fch");
+			array = Directory.GetFiles(Utils.GetSaveDataPath() + "/characters", "*.fch");
 		}
 		catch
 		{
@@ -364,7 +354,7 @@ public class PlayerProfile
 	{
 		try
 		{
-			File.Delete(Application.persistentDataPath + "/characters/" + name + ".fch");
+			File.Delete(Utils.GetSaveDataPath() + "/characters/" + name + ".fch");
 		}
 		catch
 		{
@@ -373,7 +363,7 @@ public class PlayerProfile
 
 	public static bool HaveProfile(string name)
 	{
-		return File.Exists(Application.persistentDataPath + "/characters/" + name + ".fch");
+		return File.Exists(Utils.GetSaveDataPath() + "/characters/" + name + ".fch");
 	}
 
 	public string GetFilename()

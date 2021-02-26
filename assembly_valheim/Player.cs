@@ -1506,14 +1506,15 @@ public class Player : Humanoid
 					this.Message(MessageHud.MessageType.Center, "$msg_cantremovenow", 0, null);
 					return false;
 				}
-				component.ClaimOwnership();
 				WearNTear component2 = piece.GetComponent<WearNTear>();
 				if (component2)
 				{
-					component2.Destroy();
+					component2.Remove();
 				}
 				else
 				{
+					ZLog.Log("Removing non WNT object with hammer " + piece.name);
+					component.ClaimOwnership();
 					piece.DropResources();
 					piece.m_placeEffect.Create(piece.transform.position, piece.transform.rotation, piece.gameObject.transform, 1f);
 					this.m_removeEffects.Create(piece.transform.position, Quaternion.identity, null, 1f);
@@ -1612,40 +1613,6 @@ public class Player : Humanoid
 			GoogleAnalyticsV4.instance.LogEvent("Game", "PlacedPiece", gameObject.name, 0L);
 			return true;
 		}
-		}
-	}
-
-	private void RemovePieces(Vector3 point, float range, string name, bool groundOnly)
-	{
-		Collider[] array = Physics.OverlapSphere(point, range + 3f);
-		Piece item = null;
-		float num = 0f;
-		List<Piece> list = new List<Piece>();
-		Collider[] array2 = array;
-		for (int i = 0; i < array2.Length; i++)
-		{
-			Piece componentInParent = array2[i].GetComponentInParent<Piece>();
-			if (componentInParent && (componentInParent.m_name == name || name == "") && (!groundOnly || componentInParent.m_groundPiece) && componentInParent.CanBeRemoved() && PrivateArea.CheckAccess(componentInParent.transform.position, 0f, true) && !(componentInParent.gameObject == this.m_placementGhost))
-			{
-				float num2 = Utils.DistanceXZ(point, componentInParent.transform.position);
-				if (num2 <= range)
-				{
-					if (num2 > num)
-					{
-						num = num2;
-						item = componentInParent;
-					}
-					list.Add(componentInParent);
-				}
-			}
-		}
-		list.Remove(item);
-		foreach (Piece piece in list)
-		{
-			ZNetView component = piece.GetComponent<ZNetView>();
-			component.ClaimOwnership();
-			component.Destroy();
-			GoogleAnalyticsV4.instance.LogEvent("Game", "RemovedPiece", piece.gameObject.name, 0L);
 		}
 	}
 
@@ -4192,7 +4159,7 @@ public class Player : Humanoid
 				this.m_lastStealthPosition = base.transform.position;
 				float skillFactor = this.m_skills.GetSkillFactor(Skills.SkillType.Sneak);
 				float lightFactor = StealthSystem.instance.GetLightFactor(base.GetCenterPoint());
-				this.m_stealthFactorTarget = Mathf.Lerp(0.25f + lightFactor * 0.75f, lightFactor * 0.3f, skillFactor);
+				this.m_stealthFactorTarget = Mathf.Lerp(0.5f + lightFactor * 0.5f, 0.2f + lightFactor * 0.4f, skillFactor);
 				this.m_stealthFactorTarget = Mathf.Clamp01(this.m_stealthFactorTarget);
 				this.m_seman.ModifyStealth(this.m_stealthFactorTarget, ref this.m_stealthFactorTarget);
 				this.m_stealthFactorTarget = Mathf.Clamp01(this.m_stealthFactorTarget);

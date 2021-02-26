@@ -49,8 +49,9 @@ public class ZPackage
 
 	public void Write(ZPackage pkg)
 	{
-		this.m_writer.Write(pkg.Size());
-		this.m_writer.Write(pkg.GetArray());
+		byte[] array = pkg.GetArray();
+		this.m_writer.Write(array.Length);
+		this.m_writer.Write(array);
 	}
 
 	public void Write(byte[] array)
@@ -259,6 +260,8 @@ public class ZPackage
 
 	public byte[] GetArray()
 	{
+		this.m_writer.Flush();
+		this.m_stream.Flush();
 		return this.m_stream.ToArray();
 	}
 
@@ -274,19 +277,22 @@ public class ZPackage
 
 	public int Size()
 	{
+		this.m_writer.Flush();
+		this.m_stream.Flush();
 		return (int)this.m_stream.Length;
 	}
 
 	public void Clear()
 	{
+		this.m_writer.Flush();
 		this.m_stream.SetLength(0L);
 		this.m_stream.Position = 0L;
 	}
 
 	public byte[] GenerateHash()
 	{
-		byte[] buffer = this.m_stream.ToArray();
-		return SHA512.Create().ComputeHash(buffer);
+		byte[] array = this.GetArray();
+		return SHA512.Create().ComputeHash(array);
 	}
 
 	private MemoryStream m_stream = new MemoryStream();

@@ -209,7 +209,7 @@ public class ZSteamMatchmaking
 	{
 		this.UnregisterServer();
 		SteamGameServer.SetServerName(name);
-		SteamGameServer.SetMapName(worldName);
+		SteamGameServer.SetMapName(name);
 		SteamGameServer.SetPasswordProtected(password);
 		SteamGameServer.SetGameTags(version);
 		SteamGameServer.EnableHeartbeats(true);
@@ -335,20 +335,14 @@ public class ZSteamMatchmaking
 		CSteamID that;
 		if (SteamMatchmaking.GetLobbyGameServer(lobbyID, out num, out num2, out that))
 		{
-			MasterClient.ServerData serverData = new MasterClient.ServerData();
-			serverData.m_name = lobbyData;
-			serverData.m_password = password;
-			serverData.m_version = lobbyData2;
-			serverData.m_players = numLobbyMembers;
-			serverData.m_steamHostID = (ulong)that;
-			ZLog.Log(string.Concat(new object[]
+			return new MasterClient.ServerData
 			{
-				"Got server ",
-				lobbyData,
-				" host:",
-				serverData.m_steamHostID
-			}));
-			return serverData;
+				m_name = lobbyData,
+				m_password = password,
+				m_version = lobbyData2,
+				m_players = numLobbyMembers,
+				m_steamHostID = (ulong)that
+			};
 		}
 		ZLog.Log("Failed to get lobby gameserver");
 		return null;

@@ -36,9 +36,22 @@ public class AnimalAI : BaseAI
 				this.m_target = character;
 			}
 		}
-		if (this.m_target && !this.m_target.IsDead() && base.CanSenseTarget(this.m_target))
+		if (this.m_target && this.m_target.IsDead())
 		{
-			this.SetAlerted(true);
+			this.m_target = null;
+		}
+		if (this.m_target)
+		{
+			bool flag = base.CanSenseTarget(this.m_target);
+			base.SetTargetInfo(this.m_target.GetZDOID());
+			if (flag)
+			{
+				this.SetAlerted(true);
+			}
+		}
+		else
+		{
+			base.SetTargetInfo(ZDOID.None);
 		}
 		if (base.IsAlerted())
 		{

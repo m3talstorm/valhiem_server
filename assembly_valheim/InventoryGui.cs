@@ -65,7 +65,7 @@ public class InventoryGui : MonoBehaviour
 			this.m_hiddenFrames++;
 		}
 		Player localPlayer = Player.m_localPlayer;
-		if (localPlayer == null || localPlayer.IsDead() || localPlayer.InCutscene())
+		if (localPlayer == null || localPlayer.IsDead() || localPlayer.InCutscene() || localPlayer.IsTeleporting())
 		{
 			this.Hide();
 			return;
@@ -281,6 +281,10 @@ public class InventoryGui : MonoBehaviour
 
 	private void OnTakeAll()
 	{
+		if (Player.m_localPlayer.IsTeleporting())
+		{
+			return;
+		}
 		if (this.m_currentContainer)
 		{
 			this.SetupDragItem(null, null, 1);
@@ -319,6 +323,10 @@ public class InventoryGui : MonoBehaviour
 	private void OnSelectedItem(InventoryGrid grid, ItemDrop.ItemData item, Vector2i pos, InventoryGrid.Modifier mod)
 	{
 		Player localPlayer = Player.m_localPlayer;
+		if (localPlayer.IsTeleporting())
+		{
+			return;
+		}
 		if (this.m_dragGo)
 		{
 			this.m_moveItemEffects.Create(base.transform.position, Quaternion.identity, null, 1f);

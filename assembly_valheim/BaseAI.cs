@@ -1217,6 +1217,16 @@ public class BaseAI : MonoBehaviour
 		return this.m_alerted;
 	}
 
+	protected void SetTargetInfo(ZDOID targetID)
+	{
+		this.m_nview.GetZDO().Set(BaseAI.havetTargetHash, !targetID.IsNone());
+	}
+
+	public bool HaveTarget()
+	{
+		return this.m_nview.IsValid() && this.m_nview.GetZDO().GetBool(BaseAI.havetTargetHash, false);
+	}
+
 	protected float GetAltitude()
 	{
 		float groundHeight = ZoneSystem.instance.GetGroundHeight(this.m_character.transform.position);
@@ -1439,4 +1449,6 @@ public class BaseAI : MonoBehaviour
 	private static int worldTimeHash = "lastWorldTime".GetStableHashCode();
 
 	private static int spawnTimeHash = "spawntime".GetStableHashCode();
+
+	private static int havetTargetHash = "haveTarget".GetStableHashCode();
 }

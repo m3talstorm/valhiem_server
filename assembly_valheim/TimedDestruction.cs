@@ -14,36 +14,26 @@ public class TimedDestruction : MonoBehaviour
 
 	public void Trigger()
 	{
-		base.Invoke("DestroyNow", this.m_timeout);
+		base.InvokeRepeating("DestroyNow", this.m_timeout, 1f);
 	}
 
 	public void Trigger(float timeout)
 	{
-		base.Invoke("DestroyNow", timeout);
+		base.InvokeRepeating("DestroyNow", timeout, 1f);
 	}
 
 	private void DestroyNow()
 	{
-		if (this.m_nview)
-		{
-			if (!this.m_nview.IsValid())
-			{
-				return;
-			}
-			if (this.m_nview.GetZDO().m_owner == 0L)
-			{
-				this.m_nview.ClaimOwnership();
-			}
-			if (this.m_nview.IsOwner())
-			{
-				ZNetScene.instance.Destroy(base.gameObject);
-				return;
-			}
-		}
-		else
+		if (!this.m_nview)
 		{
 			UnityEngine.Object.Destroy(base.gameObject);
+			return;
 		}
+		if (!this.m_nview.IsValid() || !this.m_nview.IsOwner())
+		{
+			return;
+		}
+		ZNetScene.instance.Destroy(base.gameObject);
 	}
 
 	public float m_timeout = 1f;

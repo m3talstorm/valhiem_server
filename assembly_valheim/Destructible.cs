@@ -165,7 +165,6 @@ public class Destructible : MonoBehaviour, IDestructible
 					}
 					else
 					{
-						ZLog.Log("Creating fragment " + meshRenderer.gameObject.name);
 						GameObject gameObject = new GameObject();
 						gameObject.layer = layer;
 						gameObject.transform.position = component.gameObject.transform.position;

@@ -18,10 +18,7 @@ public class Ragdoll : MonoBehaviour
 			this.m_mainModel.material.SetFloat("_Saturation", float2);
 			this.m_mainModel.material.SetFloat("_Value", float3);
 		}
-		if (this.m_ttl > 0f)
-		{
-			base.Invoke("DestroyNow", this.m_ttl);
-		}
+		base.InvokeRepeating("DestroyNow", this.m_ttl, 1f);
 	}
 
 	public Vector3 GetAverageBodyPosition()
@@ -40,17 +37,14 @@ public class Ragdoll : MonoBehaviour
 
 	private void DestroyNow()
 	{
-		if (this.m_nview.GetZDO().m_owner == 0L)
+		if (!this.m_nview.IsValid() || !this.m_nview.IsOwner())
 		{
-			this.m_nview.ClaimOwnership();
+			return;
 		}
-		if (this.m_nview.IsOwner())
-		{
-			Vector3 averageBodyPosition = this.GetAverageBodyPosition();
-			this.m_removeEffect.Create(averageBodyPosition, Quaternion.identity, null, 1f);
-			this.SpawnLoot(averageBodyPosition);
-			ZNetScene.instance.Destroy(base.gameObject);
-		}
+		Vector3 averageBodyPosition = this.GetAverageBodyPosition();
+		this.m_removeEffect.Create(averageBodyPosition, Quaternion.identity, null, 1f);
+		this.SpawnLoot(averageBodyPosition);
+		ZNetScene.instance.Destroy(base.gameObject);
 	}
 
 	private void RemoveInitVel()

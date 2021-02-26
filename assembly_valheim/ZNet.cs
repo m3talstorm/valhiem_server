@@ -34,9 +34,9 @@ public class ZNet : MonoBehaviour
 		ZSteamMatchmaking.Initialize();
 		if (ZNet.m_isServer)
 		{
-			this.m_adminList = new SyncedList(Application.persistentDataPath + "/adminlist.txt", "List admin players ID  ONE per line");
-			this.m_bannedList = new SyncedList(Application.persistentDataPath + "/bannedlist.txt", "List banned players ID  ONE per line");
-			this.m_permittedList = new SyncedList(Application.persistentDataPath + "/permittedlist.txt", "List permitted players ID ONE per line");
+			this.m_adminList = new SyncedList(Utils.GetSaveDataPath() + "/adminlist.txt", "List admin players ID  ONE per line");
+			this.m_bannedList = new SyncedList(Utils.GetSaveDataPath() + "/bannedlist.txt", "List banned players ID  ONE per line");
+			this.m_permittedList = new SyncedList(Utils.GetSaveDataPath() + "/permittedlist.txt", "List permitted players ID ONE per line");
 			if (ZNet.m_world == null)
 			{
 				ZNet.m_publicServer = false;
@@ -794,9 +794,16 @@ public class ZNet : MonoBehaviour
 	{
 		DateTime now = DateTime.Now;
 		string dbpath = ZNet.m_world.GetDBPath();
-		string text = dbpath + ".new";
-		string text2 = dbpath + ".old";
-		FileStream fileStream = File.Create(text);
+		string text = dbpath + ".backup";
+		if (File.Exists(dbpath))
+		{
+			if (File.Exists(text))
+			{
+				File.Delete(text);
+			}
+			File.Move(dbpath, text);
+		}
+		FileStream fileStream = File.Create(dbpath);
 		BinaryWriter binaryWriter = new BinaryWriter(fileStream);
 		binaryWriter.Write(global::Version.m_worldVersion);
 		binaryWriter.Write(this.m_netTime);
@@ -806,15 +813,10 @@ public class ZNet : MonoBehaviour
 		binaryWriter.Close();
 		fileStream.Dispose();
 		ZNet.m_world.SaveWorldMetaData();
-		if (File.Exists(dbpath))
+		if (File.Exists(text))
 		{
-			if (File.Exists(text2))
-			{
-				File.Delete(text2);
-			}
-			File.Move(dbpath, text2);
+			File.Delete(text);
 		}
-		File.Move(text, dbpath);
 		ZLog.Log("World saved ( " + (DateTime.Now - now).TotalMilliseconds.ToString() + "ms )");
 	}
 
@@ -1303,10 +1305,6 @@ public class ZNet : MonoBehaviour
 
 	private void RPC_Kick(ZRpc rpc, string user)
 	{
-		if (ServerCtrl.instance == null)
-		{
-			return;
-		}
 		if (!this.m_adminList.Contains(rpc.GetSocket().GetHostName()))
 		{
 			this.RemotePrint(rpc, "You are not admin");
@@ -1371,10 +1369,6 @@ public class ZNet : MonoBehaviour
 
 	private void RPC_Ban(ZRpc rpc, string user)
 	{
-		if (ServerCtrl.instance == null)
-		{
-			return;
-		}
 		if (!this.m_adminList.Contains(rpc.GetSocket().GetHostName()))
 		{
 			this.RemotePrint(rpc, "You are not admin");
@@ -1421,10 +1415,6 @@ public class ZNet : MonoBehaviour
 
 	private void RPC_Unban(ZRpc rpc, string user)
 	{
-		if (ServerCtrl.instance == null)
-		{
-			return;
-		}
 		if (!this.m_adminList.Contains(rpc.GetSocket().GetHostName()))
 		{
 			this.RemotePrint(rpc, "You are not admin");
@@ -1463,10 +1453,6 @@ public class ZNet : MonoBehaviour
 
 	private void RPC_PrintBanned(ZRpc rpc)
 	{
-		if (ServerCtrl.instance == null)
-		{
-			return;
-		}
 		if (!this.m_adminList.Contains(rpc.GetSocket().GetHostName()))
 		{
 			this.RemotePrint(rpc, "You are not admin");

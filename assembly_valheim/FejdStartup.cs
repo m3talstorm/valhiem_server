@@ -29,7 +29,6 @@ public class FejdStartup : MonoBehaviour
 			Application.Quit();
 			return;
 		}
-		ServerCtrl.Initialize();
 		WorldGenerator.Initialize(World.GetMenuWorld());
 		if (!global::Console.instance)
 		{
@@ -195,6 +194,11 @@ public class FejdStartup : MonoBehaviour
 			else if (a == "-password")
 			{
 				password = commandLineArgs[i + 1];
+				i++;
+			}
+			else if (a == "-savedir")
+			{
+				Utils.SetSaveDataPath(commandLineArgs[i + 1]);
 				i++;
 			}
 		}
@@ -492,15 +496,7 @@ public class FejdStartup : MonoBehaviour
 		PlayerPrefs.SetInt("publicfilter", this.m_publicFilterSwitch.isOn ? 1 : 0);
 	}
 
-	public void QueueServerListUpdate()
-	{
-		ZLog.DevLog("Queue serverlist");
-		base.CancelInvoke("RequestServerList");
-		base.Invoke("RequestServerList", 1f);
-		this.m_serverRefreshButton.interactable = false;
-	}
-
-	private void RequestServerList()
+	public void RequestServerList()
 	{
 		ZLog.DevLog("Request serverlist");
 	}
@@ -688,7 +684,7 @@ public class FejdStartup : MonoBehaviour
 	{
 		bool publicFilter = PlayerPrefs.GetInt("publicfilter", 0) == 1;
 		this.SetPublicFilter(publicFilter);
-		this.QueueServerListUpdate();
+		this.RequestServerList();
 		this.UpdateServerListGui(true);
 		this.m_filterInputField.ActivateInputField();
 	}

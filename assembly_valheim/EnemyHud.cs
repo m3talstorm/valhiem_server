@@ -91,6 +91,8 @@ public class EnemyHud : MonoBehaviour
 		hudData.m_healthSlow = hudData.m_healthRoot.transform.Find("health_slow").GetComponent<GuiBar>();
 		hudData.m_level2 = (hudData.m_gui.transform.Find("level_2") as RectTransform);
 		hudData.m_level3 = (hudData.m_gui.transform.Find("level_3") as RectTransform);
+		hudData.m_alerted = (hudData.m_gui.transform.Find("Alerted") as RectTransform);
+		hudData.m_aware = (hudData.m_gui.transform.Find("Aware") as RectTransform);
 		hudData.m_name = hudData.m_gui.transform.Find("Name").GetComponent<Text>();
 		hudData.m_name.text = Localization.instance.Localize(c.GetHoverName());
 		this.m_huds.Add(c, hudData);
@@ -104,6 +106,10 @@ public class EnemyHud : MonoBehaviour
 			return;
 		}
 		Character y = player ? player.GetHoverCreature() : null;
+		if (player)
+		{
+			player.IsCrouching();
+		}
 		Character character = null;
 		foreach (KeyValuePair<Character, EnemyHud.HudData> keyValuePair in this.m_huds)
 		{
@@ -135,6 +141,13 @@ public class EnemyHud : MonoBehaviour
 					if (value.m_level3)
 					{
 						value.m_level3.gameObject.SetActive(level == 3);
+					}
+					if (!value.m_character.IsBoss() && !value.m_character.IsPlayer())
+					{
+						bool flag = value.m_character.GetBaseAI().HaveTarget();
+						bool flag2 = value.m_character.GetBaseAI().IsAlerted();
+						value.m_alerted.gameObject.SetActive(flag2);
+						value.m_aware.gameObject.SetActive(!flag2 && flag);
 					}
 				}
 				else
@@ -230,6 +243,10 @@ public class EnemyHud : MonoBehaviour
 		public RectTransform m_level2;
 
 		public RectTransform m_level3;
+
+		public RectTransform m_alerted;
+
+		public RectTransform m_aware;
 
 		public GuiBar m_healthFast;
 
