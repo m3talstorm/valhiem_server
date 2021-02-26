@@ -1,0 +1,375 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{A770B154-AA32-4CEF-A3DC-EE75C8422E29}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>assembly_valheim</RootNamespace>
+    <AssemblyName>assembly_valheim</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="assembly_googleanalytics">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\assembly_googleanalytics.dll</HintPath>
+    </Reference>
+    <Reference Include="assembly_guiutils">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\assembly_guiutils.dll</HintPath>
+    </Reference>
+    <Reference Include="assembly_postprocessing">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\assembly_postprocessing.dll</HintPath>
+    </Reference>
+    <Reference Include="assembly_steamworks">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\assembly_steamworks.dll</HintPath>
+    </Reference>
+    <Reference Include="assembly_sunshafts">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\assembly_sunshafts.dll</HintPath>
+    </Reference>
+    <Reference Include="assembly_utils">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\assembly_utils.dll</HintPath>
+    </Reference>
+    <Reference Include="System">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\System.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\System.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AIModule">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\UnityEngine.AIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ClothModule">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\UnityEngine.ClothModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ParticleSystemModule">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ScreenCaptureModule">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\UnityEngine.ScreenCaptureModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>C:\Users\Metalstorm\Downloads\depotdownloader-2.3.6\depots\896662\6295625\valheim_server_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AnimalAI.cs" />
+    <Compile Include="AnimationEffect.cs" />
+    <Compile Include="Aoe.cs" />
+    <Compile Include="Attack.cs" />
+    <Compile Include="AudioMan.cs" />
+    <Compile Include="AutoJumpLedge.cs" />
+    <Compile Include="BaseAI.cs" />
+    <Compile Include="Beacon.cs" />
+    <Compile Include="Bed.cs" />
+    <Compile Include="Beehive.cs" />
+    <Compile Include="Billboard.cs" />
+    <Compile Include="BiomeEnvSetup.cs" />
+    <Compile Include="BossStone.cs" />
+    <Compile Include="CameraEffects.cs" />
+    <Compile Include="CamShaker.cs" />
+    <Compile Include="Chair.cs" />
+    <Compile Include="ChangeLog.cs" />
+    <Compile Include="Character.cs" />
+    <Compile Include="CharacterAnimEvent.cs" />
+    <Compile Include="CharacterDrop.cs" />
+    <Compile Include="CharacterTimedDestruction.cs" />
+    <Compile Include="Chat.cs" />
+    <Compile Include="CircleProjector.cs" />
+    <Compile Include="ClutterSystem.cs" />
+    <Compile Include="ConnectPanel.cs" />
+    <Compile Include="Console.cs" />
+    <Compile Include="Container.cs" />
+    <Compile Include="CookingStation.cs" />
+    <Compile Include="Corpse.cs" />
+    <Compile Include="CraftingStation.cs" />
+    <Compile Include="CreatureSpawner.cs" />
+    <Compile Include="DamageText.cs" />
+    <Compile Include="DepthCamera.cs" />
+    <Compile Include="Destructible.cs" />
+    <Compile Include="DestructibleType.cs" />
+    <Compile Include="DistantFogEmitter.cs" />
+    <Compile Include="DLCMan.cs" />
+    <Compile Include="Door.cs" />
+    <Compile Include="DreamTexts.cs" />
+    <Compile Include="DropOnDestroyed.cs" />
+    <Compile Include="DropTable.cs" />
+    <Compile Include="DungeonDB.cs" />
+    <Compile Include="DungeonGenerator.cs" />
+    <Compile Include="EffectArea.cs" />
+    <Compile Include="EffectFade.cs" />
+    <Compile Include="EffectList.cs" />
+    <Compile Include="EmitterRotation.cs" />
+    <Compile Include="EnemyHud.cs" />
+    <Compile Include="EnvEntry.cs" />
+    <Compile Include="EnvMan.cs" />
+    <Compile Include="EnvSetup.cs" />
+    <Compile Include="EnvZone.cs" />
+    <Compile Include="EventZone.cs" />
+    <Compile Include="Feedback.cs" />
+    <Compile Include="FejdStartup.cs" />
+    <Compile Include="Fermenter.cs" />
+    <Compile Include="Fireplace.cs" />
+    <Compile Include="Fish.cs" />
+    <Compile Include="FishingFloat.cs" />
+    <Compile Include="Floating.cs" />
+    <Compile Include="FollowPlayer.cs" />
+    <Compile Include="FootStep.cs" />
+    <Compile Include="Game.cs" />
+    <Compile Include="GameCamera.cs" />
+    <Compile Include="Gibber.cs" />
+    <Compile Include="GlobalWind.cs" />
+    <Compile Include="Growup.cs" />
+    <Compile Include="GuidePoint.cs" />
+    <Compile Include="Heightmap.cs" />
+    <Compile Include="HeightmapBuilder.cs" />
+    <Compile Include="HitArea.cs" />
+    <Compile Include="HitData.cs" />
+    <Compile Include="HotkeyBar.cs" />
+    <Compile Include="Hoverable.cs" />
+    <Compile Include="HoverText.cs" />
+    <Compile Include="Hud.cs" />
+    <Compile Include="Humanoid.cs" />
+    <Compile Include="IDestructible.cs" />
+    <Compile Include="IEquipmentVisual.cs" />
+    <Compile Include="ImpactEffect.cs" />
+    <Compile Include="InputFieldSubmit.cs" />
+    <Compile Include="InstanceRenderer.cs" />
+    <Compile Include="InstantiatePrefab.cs" />
+    <Compile Include="Interactable.cs" />
+    <Compile Include="Interpolate.cs" />
+    <Compile Include="Inventory.cs" />
+    <Compile Include="InventoryGrid.cs" />
+    <Compile Include="InventoryGui.cs" />
+    <Compile Include="IProjectile.cs" />
+    <Compile Include="ISocket.cs" />
+    <Compile Include="ItemDrop.cs" />
+    <Compile Include="ItemStand.cs" />
+    <Compile Include="ItemStyle.cs" />
+    <Compile Include="IWaterInteractable.cs" />
+    <Compile Include="KeyHints.cs" />
+    <Compile Include="Ladder.cs" />
+    <Compile Include="Ledge.cs" />
+    <Compile Include="LevelEffects.cs" />
+    <Compile Include="Leviathan.cs" />
+    <Compile Include="LightFlicker.cs" />
+    <Compile Include="LightLod.cs" />
+    <Compile Include="LineAttach.cs" />
+    <Compile Include="LineConnect.cs" />
+    <Compile Include="Location.cs" />
+    <Compile Include="LocationProxy.cs" />
+    <Compile Include="LodFadeInOut.cs" />
+    <Compile Include="LootSpawner.cs" />
+    <Compile Include="MasterClient.cs" />
+    <Compile Include="MeleeWeaponTrail.cs" />
+    <Compile Include="Menu.cs" />
+    <Compile Include="MenuScene.cs" />
+    <Compile Include="MenuShipMovement.cs" />
+    <Compile Include="MessageHud.cs" />
+    <Compile Include="MineRock.cs" />
+    <Compile Include="MineRock5.cs" />
+    <Compile Include="Minimap.cs" />
+    <Compile Include="MistEmitter.cs" />
+    <Compile Include="MonsterAI.cs" />
+    <Compile Include="MovementTest.cs" />
+    <Compile Include="MusicMan.cs" />
+    <Compile Include="NavmeshTest.cs" />
+    <Compile Include="ObjectDB.cs" />
+    <Compile Include="Odin.cs" />
+    <Compile Include="OfferingBowl.cs" />
+    <Compile Include="ParticleDecal.cs" />
+    <Compile Include="Pathfinding.cs" />
+    <Compile Include="Pickable.cs" />
+    <Compile Include="PickableItem.cs" />
+    <Compile Include="Piece.cs" />
+    <Compile Include="PieceTable.cs" />
+    <Compile Include="Plant.cs" />
+    <Compile Include="Player.cs" />
+    <Compile Include="PlayerController.cs" />
+    <Compile Include="PlayerCustomizaton.cs" />
+    <Compile Include="PlayerProfile.cs" />
+    <Compile Include="PointGenerator.cs" />
+    <Compile Include="PrivateArea.cs" />
+    <Compile Include="Procreation.cs" />
+    <Compile Include="Projectile.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Ragdoll.cs" />
+    <Compile Include="RandEventSystem.cs" />
+    <Compile Include="RandomAnimation.cs" />
+    <Compile Include="RandomEvent.cs" />
+    <Compile Include="RandomFlyingBird.cs" />
+    <Compile Include="RandomIdle.cs" />
+    <Compile Include="RandomMovement.cs" />
+    <Compile Include="RandomSpawn.cs" />
+    <Compile Include="RandomSpeak.cs" />
+    <Compile Include="Raven.cs" />
+    <Compile Include="Recipe.cs" />
+    <Compile Include="ReflectionUpdate.cs" />
+    <Compile Include="Room.cs" />
+    <Compile Include="RoomConnection.cs" />
+    <Compile Include="RopeAttachment.cs" />
+    <Compile Include="RoutedMethod.2.cs" />
+    <Compile Include="RoutedMethod.3.cs" />
+    <Compile Include="RoutedMethod.4.cs" />
+    <Compile Include="RoutedMethod.5.cs" />
+    <Compile Include="RoutedMethod.cs" />
+    <Compile Include="RoutedMethodBase.cs" />
+    <Compile Include="RuneStone.cs" />
+    <Compile Include="SceneLoader.cs" />
+    <Compile Include="ScrollRectEnsureVisible.cs" />
+    <Compile Include="SEMan.cs" />
+    <Compile Include="ServerCtrl.cs" />
+    <Compile Include="Settings.cs" />
+    <Compile Include="SE_Burning.cs" />
+    <Compile Include="SE_Cozy.cs" />
+    <Compile Include="SE_Finder.cs" />
+    <Compile Include="SE_Frost.cs" />
+    <Compile Include="SE_Harpooned.cs" />
+    <Compile Include="SE_HealthUpgrade.cs" />
+    <Compile Include="SE_Poison.cs" />
+    <Compile Include="SE_Rested.cs" />
+    <Compile Include="SE_Shield.cs" />
+    <Compile Include="SE_Smoke.cs" />
+    <Compile Include="SE_Spawn.cs" />
+    <Compile Include="SE_Stats.cs" />
+    <Compile Include="SE_Wet.cs" />
+    <Compile Include="Ship.cs" />
+    <Compile Include="ShipConstructor.cs" />
+    <Compile Include="ShipControlls.cs" />
+    <Compile Include="ShipEffects.cs" />
+    <Compile Include="ShuffleClass.cs" />
+    <Compile Include="Sign.cs" />
+    <Compile Include="Skills.cs" />
+    <Compile Include="SkillsDialog.cs" />
+    <Compile Include="SleepText.cs" />
+    <Compile Include="SlowUpdate.cs" />
+    <Compile Include="SlowUpdater.cs" />
+    <Compile Include="Smelter.cs" />
+    <Compile Include="Smoke.cs" />
+    <Compile Include="SmokeLod.cs" />
+    <Compile Include="SmokeRenderer.cs" />
+    <Compile Include="SmokeSpawner.cs" />
+    <Compile Include="SnapToGround.cs" />
+    <Compile Include="SpawnAbility.cs" />
+    <Compile Include="SpawnArea.cs" />
+    <Compile Include="SpawnOnDamaged.cs" />
+    <Compile Include="SpawnSystem.cs" />
+    <Compile Include="StateController.cs" />
+    <Compile Include="StaticPhysics.cs" />
+    <Compile Include="StaticTarget.cs" />
+    <Compile Include="StationExtension.cs" />
+    <Compile Include="StatusEffect.cs" />
+    <Compile Include="StealthSystem.cs" />
+    <Compile Include="SteamManager.cs" />
+    <Compile Include="StoreGui.cs" />
+    <Compile Include="Switch.cs" />
+    <Compile Include="Tail.cs" />
+    <Compile Include="Talker.cs" />
+    <Compile Include="Tameable.cs" />
+    <Compile Include="Teleport.cs" />
+    <Compile Include="TeleportHome.cs" />
+    <Compile Include="TeleportWorld.cs" />
+    <Compile Include="TeleportWorldTrigger.cs" />
+    <Compile Include="TerrainLod.cs" />
+    <Compile Include="TerrainModifier.cs" />
+    <Compile Include="TestCollision.cs" />
+    <Compile Include="TestSceneCharacter.cs" />
+    <Compile Include="TestSceneSetup.cs" />
+    <Compile Include="TextInput.cs" />
+    <Compile Include="TextReceiver.cs" />
+    <Compile Include="TextsDialog.cs" />
+    <Compile Include="TextViewer.cs" />
+    <Compile Include="ThorFly.cs" />
+    <Compile Include="Thunder.cs" />
+    <Compile Include="TimedDestruction.cs" />
+    <Compile Include="ToggleImage.cs" />
+    <Compile Include="ToggleSwitch.cs" />
+    <Compile Include="TombStone.cs" />
+    <Compile Include="Tracker.cs" />
+    <Compile Include="Trader.cs" />
+    <Compile Include="TreeBase.cs" />
+    <Compile Include="TreeLog.cs" />
+    <Compile Include="Tutorial.cs" />
+    <Compile Include="Vagon.cs" />
+    <Compile Include="Valkyrie.cs" />
+    <Compile Include="VariantDialog.cs" />
+    <Compile Include="Vegvisir.cs" />
+    <Compile Include="Version.cs" />
+    <Compile Include="VisEquipment.cs" />
+    <Compile Include="WaterMark.cs" />
+    <Compile Include="WaterTrigger.cs" />
+    <Compile Include="WaterVolume.cs" />
+    <Compile Include="WayStone.cs" />
+    <Compile Include="WearNTear.cs" />
+    <Compile Include="WearNTearUpdater.cs" />
+    <Compile Include="Windmill.cs" />
+    <Compile Include="World.cs" />
+    <Compile Include="WorldGenerator.cs" />
+    <Compile Include="ZBroastcast.cs" />
+    <Compile Include="ZConnector.cs" />
+    <Compile Include="ZConnector2.cs" />
+    <Compile Include="ZDO.cs" />
+    <Compile Include="ZDOComparer.cs" />
+    <Compile Include="ZDOID.cs" />
+    <Compile Include="ZDOMan.cs" />
+    <Compile Include="ZDOPool.cs" />
+    <Compile Include="ZNat.cs" />
+    <Compile Include="ZNet.cs" />
+    <Compile Include="ZNetPeer.cs" />
+    <Compile Include="ZNetScene.cs" />
+    <Compile Include="ZNetView.cs" />
+    <Compile Include="ZNtp.cs" />
+    <Compile Include="ZoneSystem.cs" />
+    <Compile Include="ZPackage.cs" />
+    <Compile Include="ZRoutedRpc.cs" />
+    <Compile Include="ZRpc.cs" />
+    <Compile Include="ZSFX.cs" />
+    <Compile Include="ZSocket.cs" />
+    <Compile Include="ZSocket2.cs" />
+    <Compile Include="ZSteamMatchmaking.cs" />
+    <Compile Include="ZSteamSocket.cs" />
+    <Compile Include="ZSyncAnimation.cs" />
+    <Compile Include="ZSyncTransform.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
