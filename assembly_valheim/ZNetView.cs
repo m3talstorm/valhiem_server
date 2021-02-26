@@ -13,9 +13,14 @@ public class ZNetView : MonoBehaviour
 			return;
 		}
 		this.m_body = base.GetComponent<Rigidbody>();
+		if (ZNetView.m_useInitZDO && ZNetView.m_initZDO == null)
+		{
+			ZLog.LogWarning("Double ZNetview when initializing object " + base.gameObject.name);
+		}
 		if (ZNetView.m_initZDO != null)
 		{
 			this.m_zdo = ZNetView.m_initZDO;
+			ZNetView.m_initZDO = null;
 			if (this.m_zdo.m_type != this.m_type && this.m_zdo.IsOwner())
 			{
 				this.m_zdo.SetType(this.m_type);
@@ -217,6 +222,8 @@ public class ZNetView : MonoBehaviour
 	private Dictionary<int, RoutedMethodBase> m_functions = new Dictionary<int, RoutedMethodBase>();
 
 	private bool m_ghost;
+
+	public static bool m_useInitZDO;
 
 	public static ZDO m_initZDO;
 

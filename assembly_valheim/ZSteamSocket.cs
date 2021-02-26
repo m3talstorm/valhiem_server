@@ -38,9 +38,11 @@ public class ZSteamSocket : IDisposable, ISocket
 		{
 			ZSteamSocket.m_statusChanged = Callback<SteamNetConnectionStatusChangedCallback_t>.CreateGameServer(new Callback<SteamNetConnectionStatusChangedCallback_t>.DispatchDelegate(ZSteamSocket.OnStatusChanged));
 			GCHandle gchandle = GCHandle.Alloc(30000f, GCHandleType.Pinned);
+			GCHandle gchandle2 = GCHandle.Alloc(1, GCHandleType.Pinned);
 			SteamGameServerNetworkingUtils.SetConfigValue(ESteamNetworkingConfigValue.k_ESteamNetworkingConfig_TimeoutInitial, ESteamNetworkingConfigScope.k_ESteamNetworkingConfig_Global, IntPtr.Zero, ESteamNetworkingConfigDataType.k_ESteamNetworkingConfig_Float, gchandle.AddrOfPinnedObject());
 			SteamGameServerNetworkingUtils.SetConfigValue(ESteamNetworkingConfigValue.k_ESteamNetworkingConfig_TimeoutConnected, ESteamNetworkingConfigScope.k_ESteamNetworkingConfig_Global, IntPtr.Zero, ESteamNetworkingConfigDataType.k_ESteamNetworkingConfig_Float, gchandle.AddrOfPinnedObject());
 			gchandle.Free();
+			gchandle2.Free();
 		}
 	}
 
@@ -127,7 +129,9 @@ public class ZSteamSocket : IDisposable, ISocket
 			this.Flush();
 			ZLog.Log("  send queue size:" + this.m_sendQueue.Count);
 			Thread.Sleep(100);
+			CSteamID steamID = this.m_peerID.GetSteamID();
 			SteamGameServerNetworkingSockets.CloseConnection(this.m_con, 0, "", false);
+			SteamGameServer.EndAuthSession(steamID);
 			this.m_con = HSteamNetConnection.Invalid;
 		}
 		if (this.m_listenSocket != HSteamListenSocket.Invalid)
@@ -252,24 +256,6 @@ public class ZSteamSocket : IDisposable, ISocket
 	private void Update()
 	{
 		this.SendQueuedPackages();
-		if (this.m_con != HSteamNetConnection.Invalid)
-		{
-			SteamNetConnectionInfo_t steamNetConnectionInfo_t;
-			if (SteamGameServerNetworkingSockets.GetConnectionInfo(this.m_con, out steamNetConnectionInfo_t))
-			{
-				if (steamNetConnectionInfo_t.m_eState != ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_Connecting && steamNetConnectionInfo_t.m_eState != ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_FindingRoute && steamNetConnectionInfo_t.m_eState != ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_Connected)
-				{
-					ZLog.Log("Bad socket state " + steamNetConnectionInfo_t.m_eState);
-					this.Close();
-					return;
-				}
-			}
-			else
-			{
-				ZLog.Log("Connection handle invalid");
-				this.Close();
-			}
-		}
 	}
 
 	private static ZSteamSocket GetListner()

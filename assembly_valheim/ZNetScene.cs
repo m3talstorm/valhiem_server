@@ -82,9 +82,21 @@ public class ZNetScene : MonoBehaviour
 		}
 		Vector3 position = zdo.GetPosition();
 		Quaternion rotation = zdo.GetRotation();
+		ZNetView.m_useInitZDO = true;
 		ZNetView.m_initZDO = zdo;
 		GameObject result = UnityEngine.Object.Instantiate<GameObject>(prefab2, position, rotation);
-		ZNetView.m_initZDO = null;
+		if (ZNetView.m_initZDO != null)
+		{
+			ZLog.LogWarning(string.Concat(new object[]
+			{
+				"ZDO ",
+				zdo.m_uid,
+				" not used when creating object ",
+				prefab2.name
+			}));
+			ZNetView.m_initZDO = null;
+		}
+		ZNetView.m_useInitZDO = false;
 		return result;
 	}
 
