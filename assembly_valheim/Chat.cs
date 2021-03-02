@@ -285,7 +285,6 @@ public class Chat : MonoBehaviour
 			HitData hitData = new HitData();
 			hitData.m_damage.m_damage = 99999f;
 			Player.m_localPlayer.Damage(hitData);
-			this.SendText(Talker.Type.Normal, "I am off to valhalla");
 			return;
 		}
 		Talker.Type type = Talker.Type.Normal;

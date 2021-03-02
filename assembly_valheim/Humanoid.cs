@@ -401,6 +401,10 @@ public class Humanoid : Character
 
 	public bool Pickup(GameObject go)
 	{
+		if (this.IsTeleporting())
+		{
+			return false;
+		}
 		ItemDrop component = go.GetComponent<ItemDrop>();
 		if (component == null)
 		{

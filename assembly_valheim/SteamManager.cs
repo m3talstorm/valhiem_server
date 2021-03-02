@@ -107,7 +107,7 @@ public class SteamManager : MonoBehaviour
 			Application.Quit();
 			return;
 		}
-		this.m_bInitialized = GameServer.Init(0U, (ushort)(SteamManager.m_serverPort + 2), (ushort)SteamManager.m_serverPort, (ushort)(SteamManager.m_serverPort + 1), EServerMode.eServerModeNoAuthentication, "1.0.0.0");
+		this.m_bInitialized = GameServer.Init(0U, 0, (ushort)SteamManager.m_serverPort, (ushort)(SteamManager.m_serverPort + 1), EServerMode.eServerModeNoAuthentication, "1.0.0.0");
 		if (!this.m_bInitialized)
 		{
 			Debug.LogError("[Steamworks.NET] GameServer.Init() failed.", this);

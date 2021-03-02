@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Sockets;
 using Steamworks;
 
 public class ZSteamMatchmaking
@@ -103,6 +104,47 @@ public class ZSteamMatchmaking
 		this.QueueLobbyJoin(data.m_steamIDLobby);
 	}
 
+	private IPAddress FindIP(string host)
+	{
+		IPAddress result;
+		try
+		{
+			IPAddress ipaddress;
+			if (IPAddress.TryParse(host, out ipaddress))
+			{
+				result = ipaddress;
+			}
+			else
+			{
+				ZLog.Log("Not an ip address " + host + " doing dns lookup");
+				IPHostEntry hostEntry = Dns.GetHostEntry(host);
+				if (hostEntry.AddressList.Length == 0)
+				{
+					ZLog.Log("Dns lookup failed");
+					result = null;
+				}
+				else
+				{
+					ZLog.Log("Got dns entries: " + hostEntry.AddressList.Length);
+					foreach (IPAddress ipaddress2 in hostEntry.AddressList)
+					{
+						if (ipaddress2.AddressFamily == AddressFamily.InterNetwork)
+						{
+							return ipaddress2;
+						}
+					}
+					result = null;
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			ZLog.Log("Exception while finding ip:" + ex.ToString());
+			result = null;
+		}
+		return result;
+	}
+
 	public void QueueServerJoin(string addr)
 	{
 		try
@@ -113,28 +155,24 @@ public class ZSteamMatchmaking
 			});
 			if (array.Length >= 2)
 			{
-				if (array[0].Split(new char[]
+				IPAddress ipaddress = this.FindIP(array[0]);
+				if (ipaddress == null)
 				{
-					'.'
-				}).Length == 4)
+					ZLog.Log("Invalid address " + array[0]);
+				}
+				else
 				{
-					int num = BitConverter.ToInt32(IPAddress.Parse(array[0]).GetAddressBytes(), 0);
-					uint num2 = (uint)IPAddress.HostToNetworkOrder(num);
-					int num3 = int.Parse(array[1]) + 1;
+					uint nIP = (uint)IPAddress.HostToNetworkOrder(BitConverter.ToInt32(ipaddress.GetAddressBytes(), 0));
+					int num = int.Parse(array[1]);
 					ZLog.Log(string.Concat(new object[]
 					{
-						"request ",
-						array[0],
-						" ",
-						array[1],
-						"  ip:",
-						num,
-						"  nboip:",
-						num2,
-						"   port:",
-						num3
+						"connect to ip:",
+						ipaddress.ToString(),
+						" port:",
+						num
 					}));
-					this.m_joinQuery = SteamMatchmakingServers.PingServer(num2, (ushort)num3, this.m_joinServerCallbackHandler);
+					this.m_joinAddr.SetIPv4(nIP, (ushort)num);
+					this.m_haveJoinAddr = true;
 				}
 			}
 		}
@@ -153,7 +191,8 @@ public class ZSteamMatchmaking
 			"  ",
 			serverData.m_steamID
 		}));
-		this.m_joinUserID = serverData.m_steamID;
+		this.m_joinAddr.SetIPv4(serverData.m_NetAdr.GetIP(), serverData.m_NetAdr.GetConnectionPort());
+		this.m_haveJoinAddr = true;
 	}
 
 	private void OnJoinServerFailed()
@@ -199,7 +238,7 @@ public class ZSteamMatchmaking
 		{
 			if (keyValuePair.Key == csteamID)
 			{
-				MasterClient.ServerData lobbyServerData = this.GetLobbyServerData(csteamID);
+				ServerData lobbyServerData = this.GetLobbyServerData(csteamID);
 				if (lobbyServerData != null)
 				{
 					lobbyServerData.m_name = keyValuePair.Value + " [" + lobbyServerData.m_name + "]";
@@ -217,7 +256,10 @@ public class ZSteamMatchmaking
 		SteamGameServer.SetMapName(name);
 		SteamGameServer.SetPasswordProtected(password);
 		SteamGameServer.SetGameTags(version);
-		SteamGameServer.EnableHeartbeats(true);
+		if (publicServer)
+		{
+			SteamGameServer.EnableHeartbeats(true);
+		}
 		this.m_registerServerName = name;
 		this.m_registerPassword = password;
 		this.m_registerVerson = version;
@@ -319,7 +361,7 @@ public class ZSteamMatchmaking
 		while ((long)num < (long)((ulong)data.m_nLobbiesMatching))
 		{
 			CSteamID lobbyByIndex = SteamMatchmaking.GetLobbyByIndex(num);
-			MasterClient.ServerData lobbyServerData = this.GetLobbyServerData(lobbyByIndex);
+			ServerData lobbyServerData = this.GetLobbyServerData(lobbyByIndex);
 			if (lobbyServerData != null)
 			{
 				this.m_matchmakingServers.Add(lobbyServerData);
@@ -329,7 +371,7 @@ public class ZSteamMatchmaking
 		this.m_serverListRevision++;
 	}
 
-	private MasterClient.ServerData GetLobbyServerData(CSteamID lobbyID)
+	private ServerData GetLobbyServerData(CSteamID lobbyID)
 	{
 		string lobbyData = SteamMatchmaking.GetLobbyData(lobbyID, "name");
 		bool password = SteamMatchmaking.GetLobbyData(lobbyID, "password") == "1";
@@ -340,7 +382,7 @@ public class ZSteamMatchmaking
 		CSteamID that;
 		if (SteamMatchmaking.GetLobbyGameServer(lobbyID, out num, out num2, out that))
 		{
-			return new MasterClient.ServerData
+			return new ServerData
 			{
 				m_name = lobbyData,
 				m_password = password,
@@ -353,7 +395,7 @@ public class ZSteamMatchmaking
 		return null;
 	}
 
-	public void GetServers(List<MasterClient.ServerData> allServers)
+	public void GetServers(List<ServerData> allServers)
 	{
 		if (this.m_friendsFilter)
 		{
@@ -364,10 +406,10 @@ public class ZSteamMatchmaking
 		this.FilterServers(this.m_dedicatedServers, allServers);
 	}
 
-	private void FilterServers(List<MasterClient.ServerData> input, List<MasterClient.ServerData> allServers)
+	private void FilterServers(List<ServerData> input, List<ServerData> allServers)
 	{
 		string text = this.m_nameFilter.ToLowerInvariant();
-		foreach (MasterClient.ServerData serverData in input)
+		foreach (ServerData serverData in input)
 		{
 			if (text.Length == 0 || serverData.m_name.ToLowerInvariant().Contains(text))
 			{
@@ -380,20 +422,27 @@ public class ZSteamMatchmaking
 		}
 	}
 
-	public CSteamID GetJoinUserID()
+	public bool GetJoinHost(out CSteamID steamID, out SteamNetworkingIPAddr addr)
 	{
-		CSteamID joinUserID = this.m_joinUserID;
-		this.m_joinUserID = CSteamID.Nil;
-		return joinUserID;
+		steamID = this.m_joinUserID;
+		addr = this.m_joinAddr;
+		if (this.m_joinUserID.IsValid() || this.m_haveJoinAddr)
+		{
+			this.m_joinUserID = CSteamID.Nil;
+			this.m_haveJoinAddr = false;
+			this.m_joinAddr.Clear();
+			return true;
+		}
+		return false;
 	}
 
 	private void OnServerResponded(HServerListRequest request, int iServer)
 	{
 		gameserveritem_t serverDetails = SteamMatchmakingServers.GetServerDetails(request, iServer);
 		string serverName = serverDetails.GetServerName();
-		MasterClient.ServerData serverData = new MasterClient.ServerData();
+		ServerData serverData = new ServerData();
 		serverData.m_name = serverName;
-		serverData.m_steamHostID = (ulong)serverDetails.m_steamID;
+		serverData.m_steamHostAddr.SetIPv4(serverDetails.m_NetAdr.GetIP(), serverDetails.m_NetAdr.GetConnectionPort());
 		serverData.m_password = serverDetails.m_bPassword;
 		serverData.m_players = serverDetails.m_nPlayers;
 		serverData.m_version = serverDetails.GetGameTags();
@@ -462,11 +511,11 @@ public class ZSteamMatchmaking
 
 	private const int maxServers = 200;
 
-	private List<MasterClient.ServerData> m_matchmakingServers = new List<MasterClient.ServerData>();
+	private List<ServerData> m_matchmakingServers = new List<ServerData>();
 
-	private List<MasterClient.ServerData> m_dedicatedServers = new List<MasterClient.ServerData>();
+	private List<ServerData> m_dedicatedServers = new List<ServerData>();
 
-	private List<MasterClient.ServerData> m_friendServers = new List<MasterClient.ServerData>();
+	private List<ServerData> m_friendServers = new List<ServerData>();
 
 	private int m_serverListRevision;
 
@@ -497,6 +546,10 @@ public class ZSteamMatchmaking
 	private CSteamID m_joinUserID = CSteamID.Nil;
 
 	private CSteamID m_queuedJoinLobby = CSteamID.Nil;
+
+	private bool m_haveJoinAddr;
+
+	private SteamNetworkingIPAddr m_joinAddr;
 
 	private List<KeyValuePair<CSteamID, string>> m_requestedFriendGames = new List<KeyValuePair<CSteamID, string>>();
 

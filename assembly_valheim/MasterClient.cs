@@ -182,12 +182,12 @@ public class MasterClient
 		this.m_registerPkg = null;
 	}
 
-	public List<MasterClient.ServerData> GetServers()
+	public List<ServerData> GetServers()
 	{
 		return this.m_servers;
 	}
 
-	public bool GetServers(List<MasterClient.ServerData> servers)
+	public bool GetServers(List<ServerData> servers)
 	{
 		if (!this.m_haveServerlist)
 		{
@@ -215,7 +215,7 @@ public class MasterClient
 		this.m_servers.Clear();
 		for (int i = 0; i < num; i++)
 		{
-			MasterClient.ServerData serverData = new MasterClient.ServerData();
+			ServerData serverData = new ServerData();
 			serverData.m_name = pkg.ReadString();
 			serverData.m_host = pkg.ReadString();
 			serverData.m_port = pkg.ReadInt();
@@ -253,7 +253,7 @@ public class MasterClient
 
 	private const int statVersion = 2;
 
-	public Action<List<MasterClient.ServerData>> m_onServerList;
+	public Action<List<ServerData>> m_onServerList;
 
 	private string m_msHost = "dvoid.noip.me";
 
@@ -269,7 +269,7 @@ public class MasterClient
 
 	private bool m_haveServerlist;
 
-	private List<MasterClient.ServerData> m_servers = new List<MasterClient.ServerData>();
+	private List<ServerData> m_servers = new List<ServerData>();
 
 	private ZPackage m_registerPkg;
 
@@ -280,29 +280,4 @@ public class MasterClient
 	private string m_nameFilter = "";
 
 	private static MasterClient m_instance;
-
-	public class ServerData
-	{
-		public override bool Equals(object obj)
-		{
-			MasterClient.ServerData serverData = obj as MasterClient.ServerData;
-			return serverData != null && (serverData.m_name == this.m_name && serverData.m_host == this.m_host && serverData.m_port == this.m_port) && serverData.m_steamHostID == this.m_steamHostID;
-		}
-
-		public string m_name;
-
-		public string m_host;
-
-		public int m_port;
-
-		public bool m_password;
-
-		public bool m_upnp;
-
-		public string m_version;
-
-		public int m_players;
-
-		public ulong m_steamHostID;
-	}
 }

@@ -260,6 +260,7 @@
     <Compile Include="ScrollRectEnsureVisible.cs" />
     <Compile Include="SEMan.cs" />
     <Compile Include="ServerCtrl.cs" />
+    <Compile Include="ServerData.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="SE_Burning.cs" />
     <Compile Include="SE_Cozy.cs" />

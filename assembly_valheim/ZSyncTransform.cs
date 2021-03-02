@@ -164,9 +164,10 @@ public class ZSyncTransform : MonoBehaviour
 			Vector3 vec2 = zdo.GetVec3(ZSyncTransform.m_velHash, Vector3.zero);
 			vector3 += vec2 * this.m_targetPosTimer;
 		}
-		if (Vector3.Distance(base.transform.position, vector3) > 0.001f)
+		float num = Vector3.Distance(base.transform.position, vector3);
+		if (num > 0.001f)
 		{
-			base.transform.position = Vector3.Lerp(base.transform.position, vector3, 0.2f);
+			base.transform.position = ((num < 5f) ? Vector3.Lerp(base.transform.position, vector3, 0.2f) : vector3);
 		}
 	}
 

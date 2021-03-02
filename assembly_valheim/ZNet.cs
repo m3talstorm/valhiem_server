@@ -26,6 +26,7 @@ public class ZNet : MonoBehaviour
 		this.m_routedRpc = new ZRoutedRpc(ZNet.m_isServer);
 		this.m_zdoMan = new ZDOMan(this.m_zdoSectorsWidth);
 		this.m_passwordDialog.gameObject.SetActive(false);
+		this.m_connectingDialog.gameObject.SetActive(false);
 		WorldGenerator.Deitialize();
 		if (!SteamManager.Initialize())
 		{
@@ -55,15 +56,27 @@ public class ZNet : MonoBehaviour
 			this.LoadWorld();
 			ZNet.m_connectionStatus = ZNet.ConnectionStatus.Connected;
 		}
-		else
-		{
-			ZLog.Log("Connecting to server " + ZNet.m_serverSteamID);
-			this.Connect(new CSteamID(ZNet.m_serverSteamID));
-		}
 		this.m_routedRpc.SetUID(this.m_zdoMan.GetMyID());
 		if (this.IsServer())
 		{
 			this.SendPlayerList();
+		}
+	}
+
+	private void Start()
+	{
+		if (!ZNet.m_isServer)
+		{
+			if (ZNet.m_serverSteamID != 0UL)
+			{
+				ZLog.Log("Connecting to server " + ZNet.m_serverSteamID);
+				this.Connect(new CSteamID(ZNet.m_serverSteamID));
+				return;
+			}
+			string str;
+			ZNet.m_serverIPAddr.ToString(out str, true);
+			ZLog.Log("Connecting to server " + str);
+			this.Connect(ZNet.m_serverIPAddr);
 		}
 	}
 
@@ -138,12 +151,15 @@ public class ZNet : MonoBehaviour
 		ZNetPeer peer = new ZNetPeer(new ZSteamSocket(hostID), true);
 		this.OnNewConnection(peer);
 		ZNet.m_connectionStatus = ZNet.ConnectionStatus.Connecting;
+		this.m_connectingDialog.gameObject.SetActive(true);
 	}
 
-	public void Connect(string host, int port)
+	public void Connect(SteamNetworkingIPAddr host)
 	{
-		this.m_serverConnector = new ZConnector2(host, port);
+		ZNetPeer peer = new ZNetPeer(new ZSteamSocket(host), true);
+		this.OnNewConnection(peer);
 		ZNet.m_connectionStatus = ZNet.ConnectionStatus.Connecting;
+		this.m_connectingDialog.gameObject.SetActive(true);
 	}
 
 	private void UpdateClientConnector(float dt)
@@ -213,6 +229,7 @@ public class ZNet : MonoBehaviour
 
 	private void RPC_ClientHandshake(ZRpc rpc, bool needPassword)
 	{
+		this.m_connectingDialog.gameObject.SetActive(false);
 		if (needPassword)
 		{
 			this.m_passwordDialog.gameObject.SetActive(true);
@@ -1017,23 +1034,27 @@ public class ZNet : MonoBehaviour
 		return Encoding.ASCII.GetString(bytes2);
 	}
 
-	public static void SetServerHost(ulong serverID)
+	public static void ResetServerHost()
 	{
-		ZNet.m_serverHost = "";
-		ZNet.m_serverHostPort = 0;
-		ZNet.m_serverSteamID = serverID;
+		ZNet.m_serverSteamID = 0UL;
+		ZNet.m_serverIPAddr.Clear();
 	}
 
-	public static void SetServerHost(string host, int port)
+	public static void SetServerHost(ulong serverID)
 	{
-		ZNet.m_serverHost = host;
-		ZNet.m_serverHostPort = port;
+		ZNet.m_serverSteamID = serverID;
+		ZNet.m_serverIPAddr.Clear();
+	}
+
+	public static void SetServerHost(SteamNetworkingIPAddr serverAddr)
+	{
 		ZNet.m_serverSteamID = 0UL;
+		ZNet.m_serverIPAddr = serverAddr;
 	}
 
 	public static string GetServerString()
 	{
-		return ZNet.m_serverHost + ":" + ZNet.m_serverHostPort;
+		return ZNet.m_serverSteamID + "/" + ZNet.m_serverIPAddr.ToString();
 	}
 
 	public bool IsServer()
@@ -1520,6 +1541,8 @@ public class ZNet : MonoBehaviour
 
 	public RectTransform m_passwordDialog;
 
+	public RectTransform m_connectingDialog;
+
 	public float m_badConnectionPing = 5f;
 
 	public int m_zdoSectorsWidth = 512;
@@ -1562,11 +1585,9 @@ public class ZNet : MonoBehaviour
 
 	private static World m_world = null;
 
-	private static string m_serverHost = "";
-
-	private static int m_serverHostPort = 0;
-
 	private static ulong m_serverSteamID = 0UL;
+
+	private static SteamNetworkingIPAddr m_serverIPAddr;
 
 	private static bool m_openServer = true;
 

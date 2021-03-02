@@ -12,6 +12,16 @@ public class ZSteamSocket : IDisposable, ISocket
 		ZSteamSocket.m_sockets.Add(this);
 	}
 
+	public ZSteamSocket(SteamNetworkingIPAddr host)
+	{
+		ZSteamSocket.RegisterGlobalCallbacks();
+		string str;
+		host.ToString(out str, true);
+		ZLog.Log("Starting to connect to " + str);
+		this.m_con = SteamNetworkingSockets.ConnectByIPAddress(ref host, 0, null);
+		ZSteamSocket.m_sockets.Add(this);
+	}
+
 	public ZSteamSocket(CSteamID peerID)
 	{
 		ZSteamSocket.RegisterGlobalCallbacks();
@@ -39,8 +49,8 @@ public class ZSteamSocket : IDisposable, ISocket
 			ZSteamSocket.m_statusChanged = Callback<SteamNetConnectionStatusChangedCallback_t>.CreateGameServer(new Callback<SteamNetConnectionStatusChangedCallback_t>.DispatchDelegate(ZSteamSocket.OnStatusChanged));
 			GCHandle gchandle = GCHandle.Alloc(30000f, GCHandleType.Pinned);
 			GCHandle gchandle2 = GCHandle.Alloc(1, GCHandleType.Pinned);
-			SteamGameServerNetworkingUtils.SetConfigValue(ESteamNetworkingConfigValue.k_ESteamNetworkingConfig_TimeoutInitial, ESteamNetworkingConfigScope.k_ESteamNetworkingConfig_Global, IntPtr.Zero, ESteamNetworkingConfigDataType.k_ESteamNetworkingConfig_Float, gchandle.AddrOfPinnedObject());
 			SteamGameServerNetworkingUtils.SetConfigValue(ESteamNetworkingConfigValue.k_ESteamNetworkingConfig_TimeoutConnected, ESteamNetworkingConfigScope.k_ESteamNetworkingConfig_Global, IntPtr.Zero, ESteamNetworkingConfigDataType.k_ESteamNetworkingConfig_Float, gchandle.AddrOfPinnedObject());
+			SteamGameServerNetworkingUtils.SetConfigValue(ESteamNetworkingConfigValue.k_ESteamNetworkingConfig_IP_AllowWithoutAuth, ESteamNetworkingConfigScope.k_ESteamNetworkingConfig_Global, IntPtr.Zero, ESteamNetworkingConfigDataType.k_ESteamNetworkingConfig_Int32, gchandle2.AddrOfPinnedObject());
 			gchandle.Free();
 			gchandle2.Free();
 		}
@@ -59,6 +69,20 @@ public class ZSteamSocket : IDisposable, ISocket
 	private static void OnStatusChanged(SteamNetConnectionStatusChangedCallback_t data)
 	{
 		ZLog.Log("Got status changed msg " + data.m_info.m_eState);
+		if (data.m_info.m_eState == ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_Connected && data.m_eOldState == ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_Connecting)
+		{
+			ZLog.Log("Connected");
+			ZSteamSocket zsteamSocket = ZSteamSocket.FindSocket(data.m_hConn);
+			if (zsteamSocket != null)
+			{
+				SteamNetConnectionInfo_t steamNetConnectionInfo_t;
+				if (SteamGameServerNetworkingSockets.GetConnectionInfo(data.m_hConn, out steamNetConnectionInfo_t))
+				{
+					zsteamSocket.m_peerID = steamNetConnectionInfo_t.m_identityRemote;
+				}
+				ZLog.Log("Got connection SteamID " + zsteamSocket.m_peerID.GetSteamID().ToString());
+			}
+		}
 		if (data.m_info.m_eState == ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_Connecting && data.m_eOldState == ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_None)
 		{
 			ZLog.Log("New connection");
@@ -77,21 +101,21 @@ public class ZSteamSocket : IDisposable, ISocket
 				":",
 				data.m_info.m_szEndDebug
 			}));
-			ZSteamSocket zsteamSocket = ZSteamSocket.FindSocket(data.m_hConn);
-			if (zsteamSocket != null)
-			{
-				ZLog.Log("  Closing socket " + zsteamSocket.GetHostName());
-				zsteamSocket.Close();
-			}
-		}
-		if (data.m_info.m_eState == ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_ClosedByPeer)
-		{
-			ZLog.Log("Socket closed by peer " + data);
 			ZSteamSocket zsteamSocket2 = ZSteamSocket.FindSocket(data.m_hConn);
 			if (zsteamSocket2 != null)
 			{
 				ZLog.Log("  Closing socket " + zsteamSocket2.GetHostName());
 				zsteamSocket2.Close();
+			}
+		}
+		if (data.m_info.m_eState == ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_ClosedByPeer)
+		{
+			ZLog.Log("Socket closed by peer " + data);
+			ZSteamSocket zsteamSocket3 = ZSteamSocket.FindSocket(data.m_hConn);
+			if (zsteamSocket3 != null)
+			{
+				ZLog.Log("  Closing socket " + zsteamSocket3.GetHostName());
+				zsteamSocket3.Close();
 			}
 		}
 	}
@@ -154,7 +178,9 @@ public class ZSteamSocket : IDisposable, ISocket
 			ZLog.Log("Listen socket already started");
 			return false;
 		}
-		this.m_listenSocket = SteamGameServerNetworkingSockets.CreateListenSocketP2P(0, 0, null);
+		SteamNetworkingIPAddr steamNetworkingIPAddr = default(SteamNetworkingIPAddr);
+		steamNetworkingIPAddr.m_port = (ushort)ZSteamSocket.m_steamDataPort;
+		this.m_listenSocket = SteamGameServerNetworkingSockets.CreateListenSocketIP(ref steamNetworkingIPAddr, 0, null);
 		ZSteamSocket.m_hostSocket = this;
 		this.m_pendingConnections.Clear();
 		return true;
@@ -260,14 +286,7 @@ public class ZSteamSocket : IDisposable, ISocket
 
 	private static ZSteamSocket GetListner()
 	{
-		foreach (ZSteamSocket zsteamSocket in ZSteamSocket.m_sockets)
-		{
-			if (zsteamSocket.IsHost())
-			{
-				return zsteamSocket;
-			}
-		}
-		return null;
+		return ZSteamSocket.m_hostSocket;
 	}
 
 	private void QueuePackage(byte[] data)
@@ -367,9 +386,16 @@ public class ZSteamSocket : IDisposable, ISocket
 		return -1;
 	}
 
+	public static void SetDataPort(int port)
+	{
+		ZSteamSocket.m_steamDataPort = port;
+	}
+
 	private static List<ZSteamSocket> m_sockets = new List<ZSteamSocket>();
 
 	private static Callback<SteamNetConnectionStatusChangedCallback_t> m_statusChanged;
+
+	private static int m_steamDataPort = 2459;
 
 	private Queue<ZSteamSocket> m_pendingConnections = new Queue<ZSteamSocket>();
 

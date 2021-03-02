@@ -160,7 +160,8 @@ public class FejdStartup : MonoBehaviour
 		string text = "Dedicated";
 		string password = "";
 		string text2 = "";
-		int serverPort = 2456;
+		int num = 2456;
+		bool flag = true;
 		for (int i = 0; i < commandLineArgs.Length; i++)
 		{
 			string a = commandLineArgs[i];
@@ -187,7 +188,7 @@ public class FejdStartup : MonoBehaviour
 				string text5 = commandLineArgs[i + 1];
 				if (text5 != "")
 				{
-					serverPort = int.Parse(text5);
+					num = int.Parse(text5);
 				}
 				i++;
 			}
@@ -201,22 +202,32 @@ public class FejdStartup : MonoBehaviour
 				Utils.SetSaveDataPath(commandLineArgs[i + 1]);
 				i++;
 			}
+			else if (a == "-public")
+			{
+				string a2 = commandLineArgs[i + 1];
+				if (a2 != "")
+				{
+					flag = (a2 == "1");
+				}
+				i++;
+			}
 		}
 		if (text2 == "")
 		{
 			text2 = text;
 		}
 		World createWorld = World.GetCreateWorld(text);
-		if (!this.IsPublicPasswordValid(password, createWorld))
+		if (flag && !this.IsPublicPasswordValid(password, createWorld))
 		{
 			string publicPasswordError = this.GetPublicPasswordError(password, createWorld);
 			ZLog.LogError("Error bad password:" + publicPasswordError);
 			Application.Quit();
 			return false;
 		}
-		ZNet.SetServer(true, true, true, text2, password, createWorld);
-		ZNet.SetServerHost("", 0);
-		SteamManager.SetServerPort(serverPort);
+		ZNet.SetServer(true, true, flag, text2, password, createWorld);
+		ZNet.ResetServerHost();
+		SteamManager.SetServerPort(num);
+		ZSteamSocket.SetDataPort(num);
 		return true;
 	}
 
@@ -467,7 +478,7 @@ public class FejdStartup : MonoBehaviour
 		bool isOn2 = this.m_openServerToggle.isOn;
 		string text = this.m_serverPassword.text;
 		ZNet.SetServer(true, isOn2, isOn, this.m_world.m_name, text, this.m_world);
-		ZNet.SetServerHost("", 0);
+		ZNet.ResetServerHost();
 		string eventLabel = "open:" + isOn2.ToString() + ",public:" + isOn.ToString();
 		Gogan.LogEvent("Menu", "WorldStart", eventLabel, 0L);
 		this.TransitionToMainScene();
@@ -505,7 +516,7 @@ public class FejdStartup : MonoBehaviour
 		this.m_serverListRevision = ZSteamMatchmaking.instance.GetServerListRevision();
 		this.m_serverList.Clear();
 		ZSteamMatchmaking.instance.GetServers(this.m_serverList);
-		this.m_serverList.Sort((MasterClient.ServerData a, MasterClient.ServerData b) => a.m_name.CompareTo(b.m_name));
+		this.m_serverList.Sort((ServerData a, ServerData b) => a.m_name.CompareTo(b.m_name));
 		if (this.m_joinServer != null && !this.m_serverList.Contains(this.m_joinServer))
 		{
 			ZLog.Log("Serverlist does not contain selected server, clearing");
@@ -544,18 +555,10 @@ public class FejdStartup : MonoBehaviour
 		}
 		for (int j = 0; j < this.m_serverList.Count; j++)
 		{
-			MasterClient.ServerData serverData = this.m_serverList[j];
+			ServerData serverData = this.m_serverList[j];
 			GameObject gameObject2 = this.m_serverListElements[j];
 			gameObject2.GetComponentInChildren<Text>().text = j + ". " + serverData.m_name;
-			UITooltip componentInChildren = gameObject2.GetComponentInChildren<UITooltip>();
-			if (!string.IsNullOrEmpty(serverData.m_host))
-			{
-				componentInChildren.m_text = serverData.m_host + ":" + serverData.m_port;
-			}
-			else
-			{
-				componentInChildren.m_text = serverData.m_steamHostID.ToString();
-			}
+			gameObject2.GetComponentInChildren<UITooltip>().m_text = serverData.ToString();
 			gameObject2.transform.Find("version").GetComponent<Text>().text = serverData.m_version;
 			gameObject2.transform.Find("players").GetComponent<Text>().text = string.Concat(new object[]
 			{
@@ -630,7 +633,14 @@ public class FejdStartup : MonoBehaviour
 	private void JoinServer()
 	{
 		ZNet.SetServer(false, false, false, "", "", null);
-		ZNet.SetServerHost(this.m_joinServer.m_steamHostID);
+		if (this.m_joinServer.m_steamHostID != 0UL)
+		{
+			ZNet.SetServerHost(this.m_joinServer.m_steamHostID);
+		}
+		else
+		{
+			ZNet.SetServerHost(this.m_joinServer.m_steamHostAddr);
+		}
 		Gogan.LogEvent("Menu", "JoinServer", "", 0L);
 		this.TransitionToMainScene();
 	}
@@ -826,23 +836,28 @@ public class FejdStartup : MonoBehaviour
 
 	private void CheckPendingSteamJoinRequest()
 	{
-		if (ZSteamMatchmaking.instance != null)
+		CSteamID that;
+		SteamNetworkingIPAddr steamHostAddr;
+		if (ZSteamMatchmaking.instance != null && ZSteamMatchmaking.instance.GetJoinHost(out that, out steamHostAddr))
 		{
-			CSteamID joinUserID = ZSteamMatchmaking.instance.GetJoinUserID();
-			if (joinUserID != CSteamID.Nil)
+			this.m_queuedJoinServer = new ServerData();
+			if (that.IsValid())
 			{
-				this.m_queuedJoinServer = new MasterClient.ServerData();
-				this.m_queuedJoinServer.m_steamHostID = (ulong)joinUserID;
-				if (this.m_serverListPanel.activeInHierarchy)
-				{
-					this.m_joinServer = this.m_queuedJoinServer;
-					this.m_queuedJoinServer = null;
-					this.JoinServer();
-					return;
-				}
-				this.HideAll();
-				this.ShowCharacterSelection();
+				this.m_queuedJoinServer.m_steamHostID = (ulong)that;
 			}
+			else
+			{
+				this.m_queuedJoinServer.m_steamHostAddr = steamHostAddr;
+			}
+			if (this.m_serverListPanel.activeInHierarchy)
+			{
+				this.m_joinServer = this.m_queuedJoinServer;
+				this.m_queuedJoinServer = null;
+				this.JoinServer();
+				return;
+			}
+			this.HideAll();
+			this.ShowCharacterSelection();
 		}
 	}
 
@@ -1366,9 +1381,9 @@ public class FejdStartup : MonoBehaviour
 
 	private World m_world;
 
-	private MasterClient.ServerData m_joinServer;
+	private ServerData m_joinServer;
 
-	private MasterClient.ServerData m_queuedJoinServer;
+	private ServerData m_queuedJoinServer;
 
 	private float m_serverListBaseSize;
 
@@ -1384,7 +1399,7 @@ public class FejdStartup : MonoBehaviour
 
 	private List<GameObject> m_serverListElements = new List<GameObject>();
 
-	private List<MasterClient.ServerData> m_serverList = new List<MasterClient.ServerData>();
+	private List<ServerData> m_serverList = new List<ServerData>();
 
 	private int m_serverListRevision = -1;
 
